@@ -8,6 +8,7 @@
 #include <stan/lang/ast/int_type.hpp>
 #include <stan/lang/ast/matrix_type.hpp>
 #include <stan/lang/ast/row_vector_type.hpp>
+#include <stan/lang/ast/tuple_type.hpp>
 #include <stan/lang/ast/vector_type.hpp>
 #include <stan/lang/ast/void_type.hpp>
 #include <stan/lang/ast/base_expr_type.hpp>

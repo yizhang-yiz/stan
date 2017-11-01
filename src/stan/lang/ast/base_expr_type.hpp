@@ -14,6 +14,7 @@ namespace stan {
     struct vector_type;
     struct row_vector_type;
     struct matrix_type;
+    struct tuple_type;
 
     /**
      * Struct to wrap the variant base type of expressions.
@@ -31,7 +32,8 @@ namespace stan {
         boost::recursive_wrapper<double_type>,
         boost::recursive_wrapper<vector_type>,
         boost::recursive_wrapper<row_vector_type>,
-        boost::recursive_wrapper<matrix_type> >
+        boost::recursive_wrapper<matrix_type>,
+        boost::recursive_wrapper<tuple_type> >
       base_t;
 
       /**
@@ -104,6 +106,13 @@ namespace stan {
        * @param x base type
        */
       base_expr_type(const matrix_type& x);  // NOLINT(runtime/explicit)
+
+      /**
+       * Construct a base expression type from a tuple base type.
+       *
+       * @param x base type
+       */
+      base_expr_type(const tuple_type& x);  // NOLINT(runtime/explicit)
 
       /**
        * Return true if the specified base expression type is the same as
@@ -193,6 +202,11 @@ namespace stan {
        * Returns true if `base_type_` is `matrix_type`, false otherwise.
        */
       bool is_matrix_type() const;
+
+      /**
+       * Returns true if `base_type_` is `tuple_type`, false otherwise.
+       */
+      bool is_tuple_type() const;
     };
   }
 }

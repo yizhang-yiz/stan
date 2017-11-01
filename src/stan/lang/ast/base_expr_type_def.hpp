@@ -41,6 +41,10 @@ namespace stan {
       : base_type_(x), order_id_(matrix_type::ORDER_ID) {
     }
 
+    base_expr_type::base_expr_type(const tuple_type& x)
+      : base_type_(x), order_id_(tuple_type::ORDER_ID) {
+    }
+
     bool base_expr_type::is_ill_formed_type() const {
       return order_id_ == ill_formed_type::ORDER_ID;
     }
@@ -67,6 +71,10 @@ namespace stan {
 
     bool base_expr_type::is_matrix_type() const {
       return order_id_ == matrix_type::ORDER_ID;
+    }
+
+    bool base_expr_type::is_tuple_type() const {
+      return order_id_ == tuple_type::ORDER_ID;
     }
 
     bool base_expr_type::operator==(const base_expr_type& base_type) const {
