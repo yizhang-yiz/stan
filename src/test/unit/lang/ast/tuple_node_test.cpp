@@ -34,8 +34,17 @@ TEST(StanLangAstTupleNode, ctor_0_arg) {
   EXPECT_TRUE(te.elements_.size() == 0);
 }
 
-
 TEST(StanLangAstTupleNode, ctor_1_arg) {
+  std::vector<expr_type> elt_types;
+  elt_types.push_back(expr_type(int_type()));
+  elt_types.push_back(expr_type(double_type()));
+  tuple_type tt(elt_types);
+  stan::lang::tuple_expr te(tt);
+  EXPECT_TRUE(te.type_.types_.size() == 2);
+}
+
+
+TEST(StanLangAstTupleNode, ctor_2_arg) {
   std::vector<expr_type> elt_types;
   elt_types.push_back(expr_type(int_type()));
   elt_types.push_back(expr_type(double_type()));
