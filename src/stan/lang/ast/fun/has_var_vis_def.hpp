@@ -23,6 +23,13 @@ namespace stan {
       return false;
     }
 
+    bool has_var_vis::operator()(const tuple_expr& e) const {
+      for (size_t i = 0; i < e.elements_.size(); ++i)
+        if (boost::apply_visitor(*this, e.elements_[i].expr_))
+          return true;
+      return false;
+    }
+
     bool has_var_vis::operator()(const array_expr& e) const {
       for (size_t i = 0; i < e.args_.size(); ++i)
         if (boost::apply_visitor(*this, e.args_[i].expr_))

@@ -23,6 +23,8 @@ namespace stan {
 
     expression::expression(const double_literal& expr) : expr_(expr) { }
 
+    expression::expression(const tuple_expr& expr) : expr_(expr) { }
+
     expression::expression(const array_expr& expr) : expr_(expr) { }
 
     expression::expression(const matrix_expr& expr) : expr_(expr) { }

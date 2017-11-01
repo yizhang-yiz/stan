@@ -18,6 +18,10 @@ namespace stan {
       return e.type_;
     }
 
+    expr_type expression_type_vis::operator()(const tuple_expr& e) const {
+      return expr_type(tuple_type(), 0);
+    }
+
     expr_type expression_type_vis::operator()(const array_expr& e) const {
       return e.type_;
     }

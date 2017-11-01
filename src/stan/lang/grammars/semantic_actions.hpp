@@ -751,6 +751,7 @@ namespace stan {
       bool operator()(const nil& /*e*/) const;
       bool operator()(const int_literal& /*x*/) const;
       bool operator()(const double_literal& /*x*/) const;
+      bool operator()(const tuple_expr& x) const;
       bool operator()(const array_expr& x) const;
       bool operator()(const matrix_expr& x) const;
       bool operator()(const row_vector_expr& x) const;

@@ -2539,6 +2539,12 @@ namespace stan {
     bool data_only_expression::operator()(const double_literal& /*x*/) const {
       return true;
     }
+    bool data_only_expression::operator()(const tuple_expr& x) const {
+      for (size_t i = 0; i < x.elements_.size(); ++i)
+        if (!boost::apply_visitor(*this, x.elements_[i].expr_))
+          return false;
+      return true;
+    }
     bool data_only_expression::operator()(const array_expr& x) const {
       for (size_t i = 0; i < x.args_.size(); ++i)
         if (!boost::apply_visitor(*this, x.args_[i].expr_))

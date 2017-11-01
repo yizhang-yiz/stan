@@ -13,6 +13,7 @@ namespace stan {
     struct nil;
     struct int_literal;
     struct double_literal;
+    struct tuple_expr;
     struct array_expr;
     struct matrix_expr;
     struct row_vector_expr;
@@ -32,6 +33,7 @@ namespace stan {
       typedef boost::variant<boost::recursive_wrapper<nil>,
                              boost::recursive_wrapper<int_literal>,
                              boost::recursive_wrapper<double_literal>,
+                             boost::recursive_wrapper<tuple_expr>,
                              boost::recursive_wrapper<array_expr>,
                              boost::recursive_wrapper<matrix_expr>,
                              boost::recursive_wrapper<row_vector_expr>,
@@ -55,6 +57,7 @@ namespace stan {
       expression(const nil& expr);  // NOLINT(runtime/explicit)
       expression(const int_literal& expr);  // NOLINT(runtime/explicit)
       expression(const double_literal& expr);  // NOLINT(runtime/explicit)
+      expression(const tuple_expr& expr);  // NOLINT(runtime/explicit)
       expression(const array_expr& expr);  // NOLINT(runtime/explicit)
       expression(const matrix_expr& expr);  // NOLINT(runtime/explicit)
       expression(const row_vector_expr& expr);  // NOLINT(runtime/explicit)

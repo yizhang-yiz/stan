@@ -101,6 +101,7 @@
 #include <stan/lang/ast/node/int_var_decl.hpp>
 #include <stan/lang/ast/node/lb_idx.hpp>
 #include <stan/lang/ast/node/lub_idx.hpp>
+#include <stan/lang/ast/node/matrix_expr.hpp>
 #include <stan/lang/ast/node/matrix_var_decl.hpp>
 #include <stan/lang/ast/node/multi_idx.hpp>
 #include <stan/lang/ast/node/no_op_statement.hpp>
@@ -113,13 +114,13 @@
 #include <stan/lang/ast/node/range.hpp>
 #include <stan/lang/ast/node/reject_statement.hpp>
 #include <stan/lang/ast/node/return_statement.hpp>
-#include <stan/lang/ast/node/matrix_expr.hpp>
 #include <stan/lang/ast/node/row_vector_expr.hpp>
 #include <stan/lang/ast/node/row_vector_var_decl.hpp>
 #include <stan/lang/ast/node/sample.hpp>
 #include <stan/lang/ast/node/simplex_var_decl.hpp>
 #include <stan/lang/ast/node/statement.hpp>
 #include <stan/lang/ast/node/statements.hpp>
+#include <stan/lang/ast/node/tuple_expr.hpp>
 #include <stan/lang/ast/node/ub_idx.hpp>
 #include <stan/lang/ast/node/unary_op.hpp>
 #include <stan/lang/ast/node/uni_idx.hpp>

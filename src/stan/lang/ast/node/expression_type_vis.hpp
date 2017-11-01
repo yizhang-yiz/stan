@@ -10,6 +10,7 @@ namespace stan {
     struct nil;
     struct int_literal;
     struct double_literal;
+    struct tuple_expr;
     struct array_expr;
     struct matrix_expr;
     struct row_vector_expr;
@@ -33,6 +34,7 @@ namespace stan {
       expr_type operator()(const nil& e) const;
       expr_type operator()(const int_literal& e) const;
       expr_type operator()(const double_literal& e) const;
+      expr_type operator()(const tuple_expr& e) const;
       expr_type operator()(const array_expr& e) const;
       expr_type operator()(const matrix_expr& e) const;
       expr_type operator()(const row_vector_expr& e) const;

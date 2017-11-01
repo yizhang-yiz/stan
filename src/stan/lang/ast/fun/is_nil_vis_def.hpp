@@ -18,6 +18,10 @@ namespace stan {
       return false;
     }
 
+    bool is_nil_vis::operator()(const tuple_expr& /* x */) const {
+      return false;
+    }
+
     bool is_nil_vis::operator()(const array_expr& /* x */) const {
       return false;
     }

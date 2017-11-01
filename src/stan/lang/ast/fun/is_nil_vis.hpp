@@ -6,24 +6,6 @@
 namespace stan {
   namespace lang {
 
-    struct nil;
-    struct int_literal;
-    struct double_literal;
-    struct array_expr;
-    struct matrix_expr;
-    struct row_vector_expr;
-    struct variable;
-    struct fun;
-    struct integrate_ode;
-    struct integrate_ode_control;
-    struct algebra_solver;
-    struct algebra_solver_control;
-    struct index_op;
-    struct index_op_sliced;
-    struct conditional_op;
-    struct binary_op;
-    struct unary_op;
-
     /**
      * Callback functor for determining if one of the variant types
      * making up an expression is nil.
@@ -32,6 +14,7 @@ namespace stan {
       bool operator()(const nil& x) const;  // NOLINT(runtime/explicit)
       bool operator()(const int_literal& x) const;  // NOLINT(runtime/explicit)
       bool operator()(const double_literal& x) const;  // NOLINT
+      bool operator()(const tuple_expr& x) const;  // NOLINT
       bool operator()(const array_expr& x) const;  // NOLINT
       bool operator()(const matrix_expr& x) const;  // NOLINT
       bool operator()(const row_vector_expr& x) const;  // NOLINT

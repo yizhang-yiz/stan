@@ -7,24 +7,6 @@
 namespace stan {
   namespace lang {
 
-    struct nil;
-    struct int_literal;
-    struct double_literal;
-    struct array_expr;
-    struct matrix_expr;
-    struct row_vector_expr;
-    struct variable;
-    struct fun;
-    struct integrate_ode;
-    struct integrate_ode_control;
-    struct algebra_solver;
-    struct algebra_solver_control;
-    struct index_op;
-    struct index_op_sliced;
-    struct conditional_op;
-    struct binary_op;
-    struct unary_op;
-
     struct var_occurs_vis : public boost::static_visitor<bool> {
       /**
        * Construct a visitor to detect whether the specified variable
@@ -60,6 +42,16 @@ namespace stan {
        * @return false
        */
       bool operator()(const double_literal& e) const;
+
+      /**
+       * Return true if the variable occurs in the specified
+       * expression.
+       *
+       * @param[in] e expression
+       * @return true if the variable occurs in any of the array
+       * expression elements
+       */
+      bool operator()(const tuple_expr& e) const;
 
       /**
        * Return true if the variable occurs in the specified

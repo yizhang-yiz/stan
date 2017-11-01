@@ -20,13 +20,6 @@ namespace stan {
        */
       std::vector<expr_type> types_;
 
-      /**
-       * Construct a tuple type from the specified sequence of
-       * expression types.
-       *
-       * @param types sequence of expression types
-       */
-      explicit tuple_type(const std::vector<expr_type>& types);
     };
 
   }
