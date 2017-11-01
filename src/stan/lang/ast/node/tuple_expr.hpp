@@ -44,21 +44,14 @@ namespace stan {
       tuple_expr();
 
       /**
-       * Construct a tuple expression from a specified type.
-       *
-       * @param type specified tuple type
-       */
-      explicit tuple_expr(const tuple_type& type);
-
-      /**
-       * Construct a tuple expression from a specified type 
+       * Construct a tuple expression from a specified type
        * and sequence of expressions.
        *
-       * @param type specified tuple type
+       * @param type tuple type
        * @param elements sequence of expressions
        */
-      tuple_expr(const tuple_type& type,
-                 const std::vector<expression>& elements);
+      explicit tuple_expr(const tuple_type& type,
+                          const std::vector<expression>& elements);
     };
 
   }

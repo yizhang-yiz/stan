@@ -8,10 +8,7 @@ namespace stan {
   namespace lang {
 
     tuple_expr::tuple_expr()
-      : type_(), elements_(), has_var_(false), tuple_expr_scope_() { }
-
-    tuple_expr::tuple_expr(const tuple_type& type)
-      : type_(type), elements_(), has_var_(false), tuple_expr_scope_() { }
+      : has_var_(false), tuple_expr_scope_() { }
 
     tuple_expr::tuple_expr(const tuple_type& type,
                            const std::vector<expression>& elements)

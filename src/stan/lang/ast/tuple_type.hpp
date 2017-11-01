@@ -20,6 +20,17 @@ namespace stan {
        */
       std::vector<expr_type> types_;
 
+      /**
+       * Construct a default tuple type.
+       */
+      tuple_type();
+      
+      /**
+       * Construct a tuple expression type with the specified element types.
+       *
+       * @param x base type
+       */
+      tuple_type(const std::vector<expr_type>& types);  // NOLINT(runtime/explicit)
     };
 
   }

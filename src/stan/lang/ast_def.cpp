@@ -9,6 +9,7 @@
 #include <stan/lang/ast/base_expr_type_def.hpp>
 #include <stan/lang/ast/expr_type_def.hpp>
 #include <stan/lang/ast/scope_def.hpp>
+#include <stan/lang/ast/tuple_type_def.hpp>
 #include <stan/lang/ast/variable_map_def.hpp>
 
 #include <stan/lang/ast/fun/ends_with_def.hpp>
@@ -105,6 +106,7 @@
 #include <stan/lang/ast/node/simplex_var_decl_def.hpp>
 #include <stan/lang/ast/node/statement_def.hpp>
 #include <stan/lang/ast/node/statements_def.hpp>
+#include <stan/lang/ast/node/tuple_expr_def.hpp>
 #include <stan/lang/ast/node/ub_idx_def.hpp>
 #include <stan/lang/ast/node/unary_op_def.hpp>
 #include <stan/lang/ast/node/uni_idx_def.hpp>
