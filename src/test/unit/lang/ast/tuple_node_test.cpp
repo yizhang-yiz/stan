@@ -43,7 +43,6 @@ TEST(StanLangAstTupleNode, ctor_1_arg) {
   EXPECT_TRUE(te.type_.types_.size() == 2);
 }
 
-
 TEST(StanLangAstTupleNode, ctor_2_arg) {
   std::vector<expr_type> elt_types;
   elt_types.push_back(expr_type(int_type()));
