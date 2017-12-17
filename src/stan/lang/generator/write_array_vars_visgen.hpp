@@ -107,6 +107,11 @@ namespace stan {
         write_array(x.name_, dims, EMPTY_EXP_VECTOR);
       }
 
+      // TODO:mitzi 
+      void operator()(const tuple_var_decl& x) const {
+        // write tuple ...
+      }
+
       void operator()(const matrix_var_decl& x) const {
         std::vector<expression> matdims;
         matdims.push_back(x.M_);

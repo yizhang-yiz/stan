@@ -94,6 +94,12 @@ namespace stan {
         generate_param_names_array(matrix_args, x.name_, x.dims_);
       }
 
+
+      // TODO:mitzi 
+      void operator()(const tuple_var_decl& x) const {
+        // ???
+      }
+
       void operator()(const matrix_var_decl& x) const {
         std::vector<expression> matrix_args;
         matrix_args.push_back(x.M_);

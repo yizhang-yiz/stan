@@ -172,6 +172,11 @@ namespace stan {
         generate_increment(x.N_, x.dims_);
       }
 
+      // TODO:mitzi 
+      void operator()(const tuple_var_decl& x) const {
+        // tuple declaration(s)
+      }
+
       void operator()(const matrix_var_decl& x) const {
         generate_validate_positive(x.name_, x.M_, 2, o_);
         generate_validate_positive(x.name_, x.N_, indent_, o_);

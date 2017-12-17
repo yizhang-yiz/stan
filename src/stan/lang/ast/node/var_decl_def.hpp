@@ -24,6 +24,8 @@ namespace stan {
 
     var_decl::var_decl(const matrix_var_decl& decl) : decl_(decl) { }
 
+    var_decl::var_decl(const tuple_var_decl& decl) : decl_(decl) { }
+
     var_decl::var_decl(const unit_vector_var_decl& decl) : decl_(decl) { }
 
     var_decl::var_decl(const simplex_var_decl& decl) : decl_(decl) { }

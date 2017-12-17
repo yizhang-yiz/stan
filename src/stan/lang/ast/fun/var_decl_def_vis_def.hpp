@@ -38,6 +38,11 @@ namespace stan {
       return x.def_;
     }
 
+    expression var_decl_def_vis::operator()(const tuple_var_decl& x)
+      const {
+      return x.def_;
+    }
+
     expression var_decl_def_vis::operator()(
                                    const unit_vector_var_decl& x) const {
      return x.def_;

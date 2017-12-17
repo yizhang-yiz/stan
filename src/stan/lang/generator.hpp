@@ -45,7 +45,6 @@
 
 // generation functions, starts from generate_cpp
 #include <stan/lang/generator/generate_arg_decl.hpp>
-#include <stan/lang/generator/generate_array_var_type.hpp>
 #include <stan/lang/generator/generate_array_builder_adds.hpp>
 #include <stan/lang/generator/generate_bare_type.hpp>
 #include <stan/lang/generator/generate_catch_throw_located.hpp>
@@ -54,6 +53,7 @@
 #include <stan/lang/generator/generate_comment.hpp>
 #include <stan/lang/generator/generate_constrained_param_names_method.hpp>
 #include <stan/lang/generator/generate_constructor.hpp>
+#include <stan/lang/generator/generate_container_var_type.hpp>
 #include <stan/lang/generator/generate_cpp.hpp>
 #include <stan/lang/generator/generate_destructor.hpp>
 #include <stan/lang/generator/generate_dims_method.hpp>

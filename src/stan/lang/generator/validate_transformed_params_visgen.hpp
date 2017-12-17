@@ -129,6 +129,11 @@ namespace stan {
         validate_array(x.name_, dims, 1);
       }
 
+      // TODO:mitzi
+      void operator()(const tuple_var_decl& x) const {
+        // validate tuple
+      }
+
       void operator()(const matrix_var_decl& x) const {
         std::vector<expression> dims(x.dims_);
         dims.push_back(x.M_);

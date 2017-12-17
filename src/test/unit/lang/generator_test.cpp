@@ -438,66 +438,66 @@ TEST(langGenerator, genArrayVars) {
   ssReal.str(std::string());
   stan::lang::generate_real_var_type(td_origin, true, ssReal);
   o.str(std::string());
-  stan::lang::generate_array_var_type(base_expr_type(double_type()),ssReal.str(),o);
+  stan::lang::generate_container_var_type(base_expr_type(double_type()),ssReal.str(),o);
   EXPECT_EQ(1, count_matches("local_scalar_t__", o.str()));
 
   ssReal.str(std::string());
   stan::lang::generate_real_var_type(td_origin, false, ssReal);
   o.str(std::string());
-  stan::lang::generate_array_var_type(base_expr_type(double_type()),ssReal.str(),o);
+  stan::lang::generate_container_var_type(base_expr_type(double_type()),ssReal.str(),o);
   EXPECT_EQ(1, count_matches("double", o.str()));
 
   ssReal.str(std::string());
   stan::lang::generate_real_var_type(fun_origin, true, ssReal);
   o.str(std::string());
-  stan::lang::generate_array_var_type(base_expr_type(double_type()),ssReal.str(),o);
+  stan::lang::generate_container_var_type(base_expr_type(double_type()),ssReal.str(),o);
   EXPECT_EQ(1, count_matches("local_scalar_t__", o.str()));
 
   ssReal.str(std::string());
   o.str(std::string());
   stan::lang::generate_real_var_type(fun_origin, false, ssReal);
-  stan::lang::generate_array_var_type(base_expr_type(double_type()),ssReal.str(),o);
+  stan::lang::generate_container_var_type(base_expr_type(double_type()),ssReal.str(),o);
   EXPECT_EQ(1, count_matches("local_scalar_t__", o.str()));
 
   ssReal.str(std::string());
   o.str(std::string());
-  stan::lang::generate_array_var_type(base_expr_type(int_type()), ssReal.str(), o);
+  stan::lang::generate_container_var_type(base_expr_type(int_type()), ssReal.str(), o);
   EXPECT_EQ(1, count_matches("int", o.str()));
 
   ssReal.str(std::string());
   stan::lang::generate_real_var_type(td_origin, false, ssReal);
   o.str(std::string());
-  stan::lang::generate_array_var_type(base_expr_type(vector_type()),ssReal.str(),o);
+  stan::lang::generate_container_var_type(base_expr_type(vector_type()),ssReal.str(),o);
   EXPECT_EQ(1, count_matches("Eigen::Matrix<double,Eigen::Dynamic,1> ", o.str()));
 
   ssReal.str(std::string());
   stan::lang::generate_real_var_type(td_origin, true, ssReal);
   o.str(std::string());
-  stan::lang::generate_array_var_type(base_expr_type(vector_type()), ssReal.str(), o);
+  stan::lang::generate_container_var_type(base_expr_type(vector_type()), ssReal.str(), o);
   EXPECT_EQ(1, count_matches("Eigen::Matrix<local_scalar_t__,Eigen::Dynamic,1> ", o.str()));
 
   ssReal.str(std::string());
   stan::lang::generate_real_var_type(td_origin, false, ssReal);
   o.str(std::string());
-  stan::lang::generate_array_var_type(base_expr_type(row_vector_type()), ssReal.str(), o);
+  stan::lang::generate_container_var_type(base_expr_type(row_vector_type()), ssReal.str(), o);
   EXPECT_EQ(1, count_matches("Eigen::Matrix<double,1,Eigen::Dynamic> ", o.str()));
   
   ssReal.str(std::string());
   stan::lang::generate_real_var_type(td_origin, true, ssReal);
   o.str(std::string());
-  stan::lang::generate_array_var_type(base_expr_type(row_vector_type()), ssReal.str(), o);
+  stan::lang::generate_container_var_type(base_expr_type(row_vector_type()), ssReal.str(), o);
   EXPECT_EQ(1, count_matches("Eigen::Matrix<local_scalar_t__,1,Eigen::Dynamic> ", o.str()));
 
   ssReal.str(std::string());
   stan::lang::generate_real_var_type(td_origin, false, ssReal);
   o.str(std::string());
-  stan::lang::generate_array_var_type(base_expr_type(matrix_type()), ssReal.str(), o);
+  stan::lang::generate_container_var_type(base_expr_type(matrix_type()), ssReal.str(), o);
   EXPECT_EQ(1, count_matches("Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic> ", o.str()));
 
   ssReal.str(std::string());
   stan::lang::generate_real_var_type(td_origin, true, ssReal);
   o.str(std::string());
-  stan::lang::generate_array_var_type(base_expr_type(matrix_type()), ssReal.str(), o);
+  stan::lang::generate_container_var_type(base_expr_type(matrix_type()), ssReal.str(), o);
   EXPECT_EQ(1, count_matches("Eigen::Matrix<local_scalar_t__,Eigen::Dynamic,Eigen::Dynamic> ", o.str()));
 }
 

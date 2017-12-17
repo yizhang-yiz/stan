@@ -58,7 +58,7 @@ namespace stan {
        * @param elements sequence of expressions
        */
       tuple_expr(const tuple_type& type,
-                          const std::vector<expression>& elements);
+                 const std::vector<expression>& elements);
     };
 
   }

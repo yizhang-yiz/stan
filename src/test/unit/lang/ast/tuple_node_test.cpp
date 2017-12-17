@@ -1,9 +1,7 @@
 #include <stan/lang/ast_def.cpp>
 #include <gtest/gtest.h>
-#include <cmath>
 #include <sstream>
 #include <string>
-#include <set>
 #include <vector>
 
 using stan::lang::expression;
@@ -55,4 +53,17 @@ TEST(StanLangAstTupleNode, ctor_2_arg) {
   stan::lang::tuple_expr te(tt,elts);
   EXPECT_TRUE(te.type_.types_.size() == 2);
   EXPECT_TRUE(te.elements_.size() == 2);
+}
+
+TEST(StanLangAstTupleNode, nested) {
+  std::vector<expr_type> nested_elt_types;
+  nested_elt_types.push_back(expr_type(int_type()));
+  nested_elt_types.push_back(expr_type(double_type()));
+  tuple_type nest_tt(nested_elt_types);
+  std::vector<expr_type> elt_types;
+  elt_types.push_back(expr_type(int_type()));
+  elt_types.push_back(expr_type(nest_tt));
+  tuple_type tt(elt_types);
+  stan::lang::tuple_expr te(tt);
+  EXPECT_TRUE(te.type_.types_.size() == 2);
 }

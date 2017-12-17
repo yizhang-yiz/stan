@@ -59,6 +59,10 @@ namespace stan {
         generate_init(x);
       }
 
+      void operator()(const tuple_var_decl& x) const {
+        generate_init(x);
+      }
+
       void operator()(const unit_vector_var_decl& x) const {
         generate_init(x);
       }

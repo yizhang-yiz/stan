@@ -17,6 +17,8 @@ namespace stan {
         o << "row vector";
       else if (type.is_matrix_type())
         o << "matrix";
+      else if (type.is_tuple_type())
+        o << "tuple";
       else if (type.is_ill_formed_type())
         o << "ill formed";
       else if (type.is_void_type())

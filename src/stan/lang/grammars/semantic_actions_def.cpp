@@ -211,7 +211,6 @@ namespace stan {
       return true;
     }
 
-
     // //////////////////////////////////
     // *** functors for grammar rules ***
     // //////////////////////////////////
@@ -2540,6 +2539,13 @@ namespace stan {
         error_msgs_ << "require unconstrained."
                     << " found range constraint." << std::endl;
         return false;
+      }
+      return true;
+    }
+    bool validate_no_constraints_vis::operator()(const tuple_var_decl& x)
+      const {
+      for (size_t i=0; i< x.element_decls_.size(); ++i) {
+        // do something
       }
       return true;
     }

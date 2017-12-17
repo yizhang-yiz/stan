@@ -368,6 +368,11 @@ namespace stan {
         o_ << "}" << EOL;
       }
 
+      // TODO:mitzi 
+      void operator()(const tuple_var_decl& x) const {
+        // dump tuple
+      }
+
       void operator()(const matrix_var_decl& x) const {
         std::vector<expression> dims = x.dims_;
         var_size_validator_(x);

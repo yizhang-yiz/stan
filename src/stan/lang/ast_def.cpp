@@ -109,6 +109,7 @@
 #include <stan/lang/ast/node/statement_def.hpp>
 #include <stan/lang/ast/node/statements_def.hpp>
 #include <stan/lang/ast/node/tuple_expr_def.hpp>
+#include <stan/lang/ast/node/tuple_var_decl_def.hpp>
 #include <stan/lang/ast/node/ub_idx_def.hpp>
 #include <stan/lang/ast/node/unary_op_def.hpp>
 #include <stan/lang/ast/node/uni_idx_def.hpp>

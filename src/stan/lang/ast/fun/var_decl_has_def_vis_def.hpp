@@ -38,6 +38,11 @@ namespace stan {
       return !is_nil(x.def_);
     }
 
+    bool var_decl_has_def_vis::operator()(const tuple_var_decl& x)
+      const {
+      return !is_nil(x.def_);
+    }
+
     bool var_decl_has_def_vis::operator()(
                                     const unit_vector_var_decl& x) const {
       return !is_nil(x.def_);

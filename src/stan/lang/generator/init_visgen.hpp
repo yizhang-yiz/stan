@@ -321,6 +321,12 @@ namespace stan {
                             x.name_, x.dims_);
       }
 
+
+      // TODO:mitzi
+      void operator()(const tuple_var_decl& x) const {
+        // generate tuple inits
+      }
+
       void operator()(const matrix_var_decl& x) const {
         generate_check_double(x.name_);
         var_size_validator_(x);

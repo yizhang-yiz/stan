@@ -123,6 +123,7 @@
 #include <stan/lang/ast/node/statement.hpp>
 #include <stan/lang/ast/node/statements.hpp>
 #include <stan/lang/ast/node/tuple_expr.hpp>
+#include <stan/lang/ast/node/tuple_var_decl.hpp>
 #include <stan/lang/ast/node/ub_idx.hpp>
 #include <stan/lang/ast/node/unary_op.hpp>
 #include <stan/lang/ast/node/uni_idx.hpp>

@@ -3,7 +3,7 @@
 
 #include <stan/lang/ast.hpp>
 #include <stan/lang/generator/constants.hpp>
-#include <stan/lang/generator/generate_array_var_type.hpp>
+#include <stan/lang/generator/generate_container_var_type.hpp>
 #include <stan/lang/generator/generate_indexed_expr.hpp>
 #include <stan/lang/generator/generate_real_var_type.hpp>
 #include <stan/lang/generator/generate_type.hpp>
@@ -23,6 +23,9 @@ namespace stan {
     void generate_idxs(const std::vector<idx>& idxs, std::ostream& o);
 
     void generate_idxs_user(const std::vector<idx>& idxs, std::ostream& o);
+
+    //    void generate_tuple_elements(const std::vector<expression>& elements,
+    //                                 bool user_facing, std::ostream& o);
 
     struct expression_visgen : public visgen {
       /**
@@ -48,11 +51,32 @@ namespace stan {
           o_ << ".0";  // trailing 0 to ensure C++ makes it a double
       }
 
+      void operator()(const tuple_expr& x) const {
+        std::stringstream ssRealType;
+        generate_real_var_type(x.tuple_expr_scope_, x.has_var_, ssRealType);
+        // generate conntaining type of tuple: "map" ???
+        o_ << EOL << "// tuple type ";
+        // std::stringstream ssElementTypes;
+        // for (size_t i=0; i < x.type_.types_.size(); ++i) {
+        //   generate_container_var_type(x.type_.types_[i].base_type_,
+        //                               ssRealType.str(), ssElementTypes);
+        //   if (i < x.type_.types_.size() - 1) ssElementTypes << ", ";
+        //   else ssElementTypes << ") ";
+        // }
+        // o_ << ssElementTypes.str();
+
+        // std::stringstream ssElements;
+        // for (size_t i=0; i < x.elements_.size(); ++i) {
+        //   generate_expression(x.elements_[i], user_facing_, ssElements);
+        // }
+        // o_ << ": " << ssElements.str() << EOL;
+      }
+      
       void operator()(const array_expr& x) const {
         std::stringstream ssRealType;
         generate_real_var_type(x.array_expr_scope_, x.has_var_, ssRealType);
         std::stringstream ssArrayType;
-        generate_array_var_type(x.type_.base_type_, ssRealType.str(),
+        generate_container_var_type(x.type_.base_type_, ssRealType.str(),
                                 ssArrayType);
         o_ << "static_cast<";
         generate_type(ssArrayType.str(), x.args_, x.type_.num_dims_, o_);

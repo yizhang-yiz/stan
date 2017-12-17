@@ -61,6 +61,10 @@ namespace stan {
         fill_real(x);
       }
 
+      void operator()(const tuple_var_decl& x) const {
+        fill_real(x);
+      }
+
       void operator()(const unit_vector_var_decl& x) const {
         fill_real(x);
       }

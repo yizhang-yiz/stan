@@ -153,6 +153,11 @@ namespace stan {
                                           read_args);
       }
 
+      // TODO:mitzi 
+      void operator()(const tuple_var_decl& x) const {
+        // initialize tuples
+      }
+
       void operator()(const matrix_var_decl& x) const {
         std::vector<expression> read_args;
         read_args.push_back(x.M_);

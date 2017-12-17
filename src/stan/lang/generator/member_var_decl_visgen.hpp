@@ -99,6 +99,12 @@ namespace stan {
       void operator()(const matrix_var_decl& x) const {
         declare_array(("matrix_d"), x.name_, x.dims_.size());
       }
+
+      // TODO:mitzi
+      void operator()(const tuple_var_decl& x) const {
+        //        declare_array(("tuple_d"), x.name_, x.dims_.size());
+      }
+      
     };
 
   }

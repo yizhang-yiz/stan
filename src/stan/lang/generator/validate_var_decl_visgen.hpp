@@ -141,6 +141,11 @@ namespace stan {
         basic_validate(x);
       }
 
+      // TODO:mitzi 
+      void operator()(const tuple_var_decl& x) const {
+        // non_basic? 
+      }
+
       void operator()(const matrix_var_decl& x) const {
         basic_validate(x);
       }

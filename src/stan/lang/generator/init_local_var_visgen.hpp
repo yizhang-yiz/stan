@@ -210,6 +210,11 @@ namespace stan {
                             "row_vector", read_args);
       }
 
+      // TODO:mitzi
+      void operator()(const tuple_var_decl& x) const {
+        // generate tuple inits
+      }
+
       void operator()(const matrix_var_decl& x) const {
         std::vector<expression> read_args;
         read_args.push_back(x.M_);

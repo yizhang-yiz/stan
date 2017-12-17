@@ -74,6 +74,11 @@ namespace stan {
                                 x.M_, x.N_);
       }
 
+      // TODO:mitzi 
+      void operator()(const tuple_var_decl& x) const {
+        // initialization - what is the c++ type or typedef?
+      }
+      
       void operator()(const cholesky_factor_var_decl& x) const {
         generate_initialization(o_, indent_, x.name_, "matrix_d", x.dims_,
                                 x.M_, x.N_);

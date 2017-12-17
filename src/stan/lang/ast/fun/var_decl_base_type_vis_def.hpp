@@ -38,6 +38,11 @@ namespace stan {
       return x.base_type_;
     }
 
+    base_var_decl var_decl_base_type_vis::operator()(const tuple_var_decl& x)
+      const {
+      return x.base_type_;
+    }
+
     base_var_decl var_decl_base_type_vis::operator()(
                                     const unit_vector_var_decl& x) const {
       return x.base_type_;

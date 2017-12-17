@@ -33,6 +33,10 @@ namespace stan {
       return x.name_;
     }
 
+    std::string name_vis::operator()(const tuple_var_decl& x) const {
+      return x.name_;
+    }
+
     std::string name_vis::operator()(const unit_vector_var_decl& x) const {
       return x.name_;
     }

@@ -181,6 +181,11 @@ namespace stan {
                       ctor_args, x.name_, x.dims_);
       }
 
+      // TODO:mitzi 
+      void operator()(const tuple_var_decl& x) const {
+        // generate tuple declaration(s)
+      }
+
       void operator()(const unit_vector_var_decl& x) const {
         std::vector<expression> ctor_args;
         generate_validate_positive(x.name_, x.K_, indent_, o_);

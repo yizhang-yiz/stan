@@ -13,6 +13,7 @@
 #include <stan/lang/ast/node/positive_ordered_var_decl.hpp>
 #include <stan/lang/ast/node/row_vector_var_decl.hpp>
 #include <stan/lang/ast/node/simplex_var_decl.hpp>
+#include <stan/lang/ast/node/tuple_var_decl.hpp>
 #include <stan/lang/ast/node/unit_vector_var_decl.hpp>
 #include <stan/lang/ast/node/vector_var_decl.hpp>
 #include <boost/variant/static_visitor.hpp>
@@ -78,6 +79,14 @@ namespace stan {
        * @return the name of the variable being declared
        */
       std::string operator()(const matrix_var_decl& x) const;
+
+      /**
+       * Return the name of the variable.
+       *
+       * @param x variable declaration
+       * @return the name of the variable being declared
+       */
+      std::string operator()(const tuple_var_decl& x) const;
 
       /**
        * Return the name of the variable.

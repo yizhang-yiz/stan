@@ -763,6 +763,7 @@ namespace stan {
       bool operator()(const vector_var_decl& x) const;
       bool operator()(const row_vector_var_decl& x) const;
       bool operator()(const matrix_var_decl& x) const;
+      bool operator()(const tuple_var_decl& x) const;
       bool operator()(const unit_vector_var_decl& /*x*/) const;
       bool operator()(const simplex_var_decl& /*x*/) const;
       bool operator()(const ordered_var_decl& /*x*/) const;

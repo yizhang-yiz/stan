@@ -58,6 +58,10 @@ namespace stan {
         generate_param_names(x.name_);
       }
 
+      void operator()(const tuple_var_decl& x) const {
+        generate_param_names(x.name_);
+      }
+
       void operator()(const unit_vector_var_decl& x) const {
         generate_param_names(x.name_);
       }

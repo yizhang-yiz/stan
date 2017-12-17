@@ -15,6 +15,7 @@
 #include <stan/lang/ast/node/positive_ordered_var_decl.hpp>
 #include <stan/lang/ast/node/row_vector_var_decl.hpp>
 #include <stan/lang/ast/node/simplex_var_decl.hpp>
+#include <stan/lang/ast/node/tuple_var_decl.hpp>
 #include <stan/lang/ast/node/unit_vector_var_decl.hpp>
 #include <stan/lang/ast/node/vector_var_decl.hpp>
 #include <boost/variant/recursive_variant.hpp>
@@ -37,6 +38,7 @@ namespace stan {
                          boost::recursive_wrapper<vector_var_decl>,
                          boost::recursive_wrapper<row_vector_var_decl>,
                          boost::recursive_wrapper<matrix_var_decl>,
+                         boost::recursive_wrapper<tuple_var_decl>,
                          boost::recursive_wrapper<simplex_var_decl>,
                          boost::recursive_wrapper<unit_vector_var_decl>,
                          boost::recursive_wrapper<ordered_var_decl>,
@@ -108,6 +110,14 @@ namespace stan {
        * @param decl variable declaration
        */
       var_decl(const matrix_var_decl& decl);  // NOLINT(runtime/explicit)
+
+      /**
+       * Construct a variable declaration with the specified
+       * basic declaration.  
+       *
+       * @param decl variable declaration
+       */
+      var_decl(const tuple_var_decl& decl);  // NOLINT(runtime/explicit)
 
       /**
        * Construct a variable declaration with the specified
