@@ -1716,13 +1716,13 @@ namespace stan {
                    << " must be data only and not reference parameters";
         pass = false;
       }
-      if (has_var(ode_fun.ts_, var_map)) {
-        error_msgs << "fourth argument to "
-                   << ode_fun.integration_function_name_
-                   << " (solution times)"
-                   << " must be data only and not reference parameters";
-        pass = false;
-      }
+      // if (has_var(ode_fun.ts_, var_map)) {
+      //   error_msgs << "fourth argument to "
+      //              << ode_fun.integration_function_name_
+      //              << " (solution times)"
+      //              << " must be data only and not reference parameters";
+      //   pass = false;
+      // }
       if (has_var(ode_fun.x_, var_map)) {
         error_msgs << "sixth argument to "
                    << ode_fun.integration_function_name_
