@@ -21,8 +21,8 @@ TEST(lang_parser, integrate_ode_bad) {
               "seventh argument to integrate_ode must have type int[]");
   test_throws("ode/bad_t0_var_type",
       "third argument to integrate_ode (initial times) must be data only");
-  test_throws("ode/bad_ts_var_type",
-      "fourth argument to integrate_ode (solution times) must be data only");
+  // test_throws("ode/bad_ts_var_type",
+  //     "fourth argument to integrate_ode (solution times) must be data only");
   test_throws("ode/bad_x_var_type",
       "sixth argument to integrate_ode (real data) must be data only");
 }
@@ -43,8 +43,8 @@ TEST(lang_parser, integrate_ode_rk45_bad) {
               "seventh argument to integrate_ode_rk45 must have type int[]");
   test_throws("ode/bad_t0_var_type_rk45",
       "third argument to integrate_ode_rk45 (initial times) must be data only");
-  test_throws("ode/bad_ts_var_type_rk45",
-    "fourth argument to integrate_ode_rk45 (solution times) must be data only");
+  // test_throws("ode/bad_ts_var_type_rk45",
+  //   "fourth argument to integrate_ode_rk45 (solution times) must be data only");
   test_throws("ode/bad_x_var_type_rk45",
       "sixth argument to integrate_ode_rk45 (real data) must be data only");
 }
@@ -67,8 +67,8 @@ TEST(lang_parser, integrate_ode_bdf_bad) {
               "seventh argument to integrate_ode_bdf must have type int[]");
   test_throws("ode/bad_t0_var_type_bdf",
       "third argument to integrate_ode_bdf (initial times) must be data only");
-  test_throws("ode/bad_ts_var_type_bdf",
-    "fourth argument to integrate_ode_bdf (solution times) must be data only");
+  // test_throws("ode/bad_ts_var_type_bdf",
+  //   "fourth argument to integrate_ode_bdf (solution times) must be data only");
   test_throws("ode/bad_x_var_type_bdf",
       "sixth argument to integrate_ode_bdf (real data) must be data only");
 }
@@ -92,8 +92,8 @@ TEST(lang_parser, integrate_ode_rk45_control_bad) {
               "seventh argument to integrate_ode_rk45 must have type int[]");
   test_throws("ode/bad_t0_var_type_rk45_control",
       "third argument to integrate_ode_rk45 (initial times) must be data only");
-  test_throws("ode/bad_ts_var_type_rk45_control",
-    "fourth argument to integrate_ode_rk45 (solution times) must be data only");
+  // test_throws("ode/bad_ts_var_type_rk45_control",
+  //   "fourth argument to integrate_ode_rk45 (solution times) must be data only");
   test_throws("ode/bad_x_var_type_rk45_control",
       "sixth argument to integrate_ode_rk45 (real data) must be data only");
 }
@@ -114,8 +114,8 @@ TEST(lang_parser, integrate_ode_bdf_control_bad) {
               "seventh argument to integrate_ode_bdf must have type int[]");
   test_throws("ode/bad_t0_var_type_bdf_control",
       "third argument to integrate_ode_bdf (initial times) must be data only");
-  test_throws("ode/bad_ts_var_type_bdf_control",
-    "fourth argument to integrate_ode_bdf (solution times) must be data only");
+  // test_throws("ode/bad_ts_var_type_bdf_control",
+  //   "fourth argument to integrate_ode_bdf (solution times) must be data only");
   test_throws("ode/bad_x_var_type_bdf_control",
       "sixth argument to integrate_ode_bdf (real data) must be data only");
 }
