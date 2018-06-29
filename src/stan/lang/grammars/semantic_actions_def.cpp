@@ -276,6 +276,11 @@ namespace stan {
     template void assign_lhs::operator()(expression&,
                                          const algebra_solver_control&)
       const;
+    template void assign_lhs::operator()(expression&, const forward_pde&)
+      const;
+    template void assign_lhs::operator()(expression&,
+                                         const forward_pde_control&)
+      const;
     template void assign_lhs::operator()(expression&,
                                          const map_rect&)
       const;
@@ -1889,6 +1894,87 @@ namespace stan {
     boost::phoenix::function<validate_algebra_solver_control>
     validate_algebra_solver_control_f;
 
+    // PDE semantic actions def
+    template <class T>
+    void validate_forward_pde_non_control_args(const T& pde_fun,
+                                                  const variable_map& var_map,
+                                                  bool& pass,
+                                                  std::ostream& error_msgs) {
+      pass = true;
+      // test function argument type
+      expr_type sys_result_type(double_type(), 2);
+      std::vector<function_arg_type> sys_arg_types;
+      // functor args: theta, need_sens, x_r, x_i
+      sys_arg_types.push_back(function_arg_type(expr_type(double_type(), 1)));
+      sys_arg_types.push_back(function_arg_type(expr_type(int_type(), 0)));
+      sys_arg_types.push_back(function_arg_type(expr_type(double_type(), 1), true));
+      sys_arg_types.push_back(function_arg_type(expr_type(int_type(), 1)));
+      function_signature_t system_signature(sys_result_type, sys_arg_types);
+      if (!function_signatures::instance()
+          .is_defined(pde_fun.system_function_name_, system_signature)) {
+        error_msgs << "first argument to "
+                   << "forword_pde"
+                   << " must be the name of a function with signature"
+                   << " (real[], int, real[], int[]) : real[ , ] "
+                   << std::endl;
+        pass = false;
+      }
+
+      if (pde_fun.theta_.expression_type() != expr_type(double_type(), 1)) {
+        error_msgs << "second argument to forward_pde"
+                   << " must have type real[] for parameters;"
+                   << " found type = "
+                   << pde_fun.theta_.expression_type()
+                   << ". " << std::endl;
+        pass = false;
+      }
+      if (pde_fun.x_r_.expression_type() != expr_type(double_type(), 1)) {
+        error_msgs << "third argument to forward_pde"
+                   << " must have type real[] for real data;"
+                   << " found type = "
+                   << pde_fun.x_r_.expression_type()
+                   << ". " << std::endl;
+        pass = false;
+      }
+      if (pde_fun.x_i_.expression_type() != expr_type(int_type(), 1)) {
+        error_msgs << "fourth argument to forward_pde"
+                   << " must have type int[] for integer data;"
+                   << " found type = "
+                   << pde_fun.x_i_.expression_type()
+                   << ". " << std::endl;
+        pass = false;
+      }
+
+      // test data-only variables do not have parameters (int locals OK)
+      if (has_var(pde_fun.x_r_, var_map)) {
+        error_msgs << "third argument to forward_pde"
+                   << " (real data)"
+                   << " must be data only and not reference parameters"
+                   << std::endl;
+        pass = false;
+      }
+    }
+    
+    void validate_forward_pde::operator()(const forward_pde& pde_fun,
+                                          const variable_map& var_map,
+                                          bool& pass,
+                                          std::ostream& error_msgs) const {
+      validate_forward_pde_non_control_args(pde_fun, var_map, pass,
+                                            error_msgs);
+    }
+    boost::phoenix::function<validate_forward_pde>
+      validate_forward_pde_f;
+
+    void validate_forward_pde_control::operator()(const forward_pde_control& pde_fun,
+                                                  const variable_map& var_map, 
+                                                  bool& pass,
+                                                  std::ostream& error_msgs) const {
+      validate_forward_pde_non_control_args(pde_fun, var_map, pass, error_msgs);
+    }
+    boost::phoenix::function<validate_forward_pde_control>
+    validate_forward_pde_control_f;
+    // end of PDE
+
     void validate_map_rect::operator()(
             map_rect& mr, const variable_map& var_map,
             bool& pass, std::ostream& error_msgs) const {
@@ -2695,6 +2781,13 @@ namespace stan {
       return boost::apply_visitor(*this, x.theta_.expr_);
     }
     bool data_only_expression::operator()(const algebra_solver_control& x)
+      const {
+      return boost::apply_visitor(*this, x.theta_.expr_);
+    }
+    bool data_only_expression::operator()(const forward_pde& x) const {
+      return boost::apply_visitor(*this, x.theta_.expr_);
+    }
+    bool data_only_expression::operator()(const forward_pde_control& x)
       const {
       return boost::apply_visitor(*this, x.theta_.expr_);
     }

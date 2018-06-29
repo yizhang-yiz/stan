@@ -106,6 +106,16 @@ namespace stan {
       algebra_solver_control_r;
 
       boost::spirit::qi::rule<Iterator,
+                              forward_pde(scope),
+                              whitespace_grammar<Iterator> >
+      forward_pde_r;
+
+      boost::spirit::qi::rule<Iterator,
+                              forward_pde_control(scope),
+                              whitespace_grammar<Iterator> >
+      forward_pde_control_r;
+
+      boost::spirit::qi::rule<Iterator,
                               map_rect(scope),
                               whitespace_grammar<Iterator> >
       map_rect_r;

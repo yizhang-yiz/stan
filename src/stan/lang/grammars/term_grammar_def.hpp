@@ -62,6 +62,18 @@ BOOST_FUSION_ADAPT_STRUCT(stan::lang::algebra_solver_control,
                            (stan::lang::expression, fun_tol_)
                            (stan::lang::expression, max_num_steps_) )
 
+BOOST_FUSION_ADAPT_STRUCT(stan::lang::forward_pde,
+                           (std::string, system_function_name_)
+                           (stan::lang::expression, theta_)
+                           (stan::lang::expression, x_r_)
+                           (stan::lang::expression, x_i_) )
+
+BOOST_FUSION_ADAPT_STRUCT(stan::lang::forward_pde_control,
+                           (std::string, system_function_name_)
+                           (stan::lang::expression, theta_)
+                           (stan::lang::expression, x_r_)
+                           (stan::lang::expression, x_i_) )
+
 BOOST_FUSION_ADAPT_STRUCT(stan::lang::map_rect,
                           (std::string, fun_name_)
                           (stan::lang::expression, shared_params_)
@@ -271,6 +283,38 @@ namespace stan {
           [validate_algebra_solver_f(_val, boost::phoenix::ref(var_map_),
                                      _pass, boost::phoenix::ref(error_msgs_))];
 
+      forward_pde_control_r.name("expression");
+      forward_pde_control_r
+        %= lit("forward_pde")
+        >> lit('(')
+        >> identifier_r          // 1) system function name (function only)
+        >> lit(',')
+        >> expression_g(_r1)     // 3) theta
+        >> lit(',')
+        >> expression_g(_r1)     // 4) x_r (data only)
+        >> lit(',')
+        >> expression_g(_r1)     // 5) x_i (data only)
+        > lit(')')
+          [validate_forward_pde_control_f(_val,
+                                             boost::phoenix::ref(var_map_),
+                                             _pass,
+                                             boost::phoenix::ref(error_msgs_))];
+
+      forward_pde_r.name("expression");
+      forward_pde_r
+        %= (lit("forward_pde") >> no_skip[!char_("a-zA-Z0-9_")])
+        > lit('(')
+        > identifier_r          // 1) system function name (function only)
+        > lit(',')
+        > expression_g(_r1)     // 3) theta
+        > lit(',')
+        > expression_g(_r1)     // 4) x_r (data only)
+        > lit(',')
+        > expression_g(_r1)     // 5) x_i (data only)
+        > lit(')')
+          [validate_forward_pde_f(_val, boost::phoenix::ref(var_map_),
+                                     _pass, boost::phoenix::ref(error_msgs_))];
+
       map_rect_r.name("map_rect");
       map_rect_r
           %= (lit("map_rect") >> no_skip[!char_("a-zA-Z0-9_")])
@@ -294,6 +338,8 @@ namespace stan {
         | integrate_ode_r(_r1)[assign_lhs_f(_val, _1)]
         | algebra_solver_control_r(_r1)[assign_lhs_f(_val, _1)]
         | algebra_solver_r(_r1)[assign_lhs_f(_val, _1)]
+        | forward_pde_control_r(_r1)[assign_lhs_f(_val, _1)]
+        | forward_pde_r(_r1)[assign_lhs_f(_val, _1)]
         | map_rect_r(_r1)[assign_lhs_f(_val, _1)]
         | (fun_r(_r1)[assign_lhs_f(_b, _1)]
            > eps[set_fun_type_named_f(_val, _b, _r1, _pass,

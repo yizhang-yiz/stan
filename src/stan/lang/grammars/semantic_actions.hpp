@@ -618,6 +618,35 @@ namespace stan {
     extern boost::phoenix::function<validate_algebra_solver_control>
     validate_algebra_solver_control_f;
 
+    // PDE
+    // test first arguments for both algebra_solver calling patterns
+    // (with/without control)
+    template <class T>
+    void validate_forward_pde_non_control_args(const T& alg_fun,
+                                                  const variable_map& var_map,
+                                                  bool& pass,
+                                                  std::ostream& error_msgs);
+
+    // called from: term_grammar
+    struct validate_forward_pde : public phoenix_functor_quaternary {
+      void operator()(const forward_pde& alg_fun,
+                      const variable_map& var_map, bool& pass,
+                      std::ostream& error_msgs) const;
+    };
+    extern boost::phoenix::function<validate_forward_pde>
+    validate_forward_pde_f;
+
+    // called from: term_grammar
+    struct validate_forward_pde_control
+      : public phoenix_functor_quaternary {
+      void operator()(const forward_pde_control& alg_fun,
+                      const variable_map& var_map, bool& pass,
+                      std::ostream& error_msgs) const;
+    };
+    extern boost::phoenix::function<validate_forward_pde_control>
+    validate_forward_pde_control_f;
+    // end PDE
+
     // called from: term_grammar
     /**
      * Functor for validating the arguments to map_rect.
@@ -813,6 +842,8 @@ namespace stan {
       bool operator()(const integrate_ode_control& x) const;
       bool operator()(const algebra_solver& x) const;
       bool operator()(const algebra_solver_control& x) const;
+      bool operator()(const forward_pde& x) const;
+      bool operator()(const forward_pde_control& x) const;
       bool operator()(const map_rect& x) const;
       bool operator()(const fun& x) const;
       bool operator()(const index_op& x) const;

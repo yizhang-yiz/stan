@@ -55,6 +55,8 @@
 
 #include <stan/lang/ast/node/algebra_solver_def.hpp>
 #include <stan/lang/ast/node/algebra_solver_control_def.hpp>
+#include <stan/lang/ast/node/forward_pde_def.hpp>
+#include <stan/lang/ast/node/forward_pde_control_def.hpp>
 #include <stan/lang/ast/node/arg_decl_def.hpp>
 #include <stan/lang/ast/node/array_expr_def.hpp>
 #include <stan/lang/ast/node/assgn_def.hpp>

@@ -220,6 +220,32 @@ namespace stan {
         o_ << ")";
       }
 
+      void operator()(const forward_pde& fx) const {
+        o_ << "forward_pde"
+           << '('
+           << fx.system_function_name_
+           << "_functor__(), ";
+        generate_expression(fx.theta_, user_facing_, o_);
+        o_ << ", ";
+        generate_expression(fx.x_r_, NOT_USER_FACING, o_);
+        o_ << ", ";
+        generate_expression(fx.x_i_, NOT_USER_FACING, o_);
+        o_ << ", pstream__)";
+      }
+
+      void operator()(const forward_pde_control& fx) const {
+        o_ << "forward_pde"
+           << '('
+           << fx.system_function_name_
+           << "_functor__(), ";
+        generate_expression(fx.theta_, user_facing_, o_);
+        o_ << ", ";
+        generate_expression(fx.x_r_, NOT_USER_FACING, o_);
+        o_ << ", ";
+        generate_expression(fx.x_i_, NOT_USER_FACING, o_);
+        o_ << ", pstream__)";
+      }
+
       void operator()(const map_rect& fx) const {
         o_ << "map_rect";
         o_ << "<" << fx.call_id_ << ", " << fx.fun_name_ << "_functor__>";

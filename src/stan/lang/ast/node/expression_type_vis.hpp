@@ -19,6 +19,8 @@ namespace stan {
     struct integrate_ode_control;
     struct algebra_solver;
     struct algebra_solver_control;
+    struct forward_pde;
+    struct forward_pde_control;
     struct map_rect;
     struct index_op;
     struct index_op_sliced;
@@ -43,6 +45,8 @@ namespace stan {
       expr_type operator()(const integrate_ode_control& e) const;
       expr_type operator()(const algebra_solver& e) const;
       expr_type operator()(const algebra_solver_control& e) const;
+      expr_type operator()(const forward_pde& e) const;
+      expr_type operator()(const forward_pde_control& e) const;
       expr_type operator()(const map_rect& e) const;
       expr_type operator()(const index_op& e) const;
       expr_type operator()(const index_op_sliced& e) const;

@@ -19,6 +19,8 @@ namespace stan {
     struct integrate_ode_control;
     struct algebra_solver;
     struct algebra_solver_control;
+    struct forward_pde;
+    struct forward_pde_control;
     struct map_rect;
     struct index_op;
     struct index_op_sliced;
@@ -145,6 +147,24 @@ namespace stan {
        * @return true if the variable occurs in the arguments
        */
       bool operator()(const algebra_solver_control& e) const;
+
+      /**
+       * Return true if the variable occurs in the specified
+       * expression.
+       *
+       * @param[in] e expression
+       * @return true if the variable occurs in the arguments
+       */
+      bool operator()(const forward_pde& e) const;
+
+      /**
+       * Return true if the variable occurs in the specified
+       * expression.
+       *
+       * @param[in] e expression
+       * @return true if the variable occurs in the arguments
+       */
+      bool operator()(const forward_pde_control& e) const;
 
       /**
        * Return true if the variable occurs in the specified

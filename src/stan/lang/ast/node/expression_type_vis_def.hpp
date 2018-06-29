@@ -54,6 +54,16 @@ namespace stan {
     }
 
     expr_type
+    expression_type_vis::operator()(const forward_pde& e) const {
+      return expr_type(double_type(), 1);
+    }
+
+    expr_type
+    expression_type_vis::operator()(const forward_pde_control& e) const {
+      return expr_type(double_type(), 1);
+    }
+    
+    expr_type
     expression_type_vis::operator()(const map_rect& e) const {
       return expr_type(vector_type(), 0);
     }

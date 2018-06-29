@@ -79,6 +79,16 @@ namespace stan {
       return boost::apply_visitor(*this, e.theta_.expr_);
     }
 
+    bool has_var_vis::operator()(const forward_pde& e) const {
+      // only theta may contain vars
+      return boost::apply_visitor(*this, e.theta_.expr_);
+    }
+
+    bool has_var_vis::operator()(const forward_pde_control& e) const {
+      // only theta may contain vars
+      return boost::apply_visitor(*this, e.theta_.expr_);
+    }
+
     bool has_var_vis::operator()(const map_rect& e) const {
       // only shared and job params may contain vars
       return boost::apply_visitor(*this, e.shared_params_.expr_)

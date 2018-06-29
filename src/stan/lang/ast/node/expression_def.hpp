@@ -38,6 +38,10 @@ namespace stan {
 
     expression::expression(const algebra_solver_control& expr) : expr_(expr) { }
 
+    expression::expression(const forward_pde& expr) : expr_(expr) { }
+
+    expression::expression(const forward_pde_control& expr) : expr_(expr) { }
+
     expression::expression(const map_rect& expr) : expr_(expr) { }
 
     expression::expression(const fun& expr) : expr_(expr) { }
