@@ -222,4 +222,12 @@ TEST_F(McmcChains, quantile_tests) {
   for (size_t i = 0; i < probs.size(); ++i) {
     EXPECT_TRUE(std::isnan(stepsize_quantiles(i)));
   }
+
+  Eigen::VectorXd bad_probs(3);
+  bad_probs << 5, 50, 95;
+  Eigen::VectorXd y_sim_quantiles = datagen_chains.quantiles("y_sim[1]", bad_probs);
+  for (size_t i = 0; i < bad_probs.size(); ++i) {
+    EXPECT_TRUE(std::isnan(y_sim_quantiles(i)));
+  }
+
 }
