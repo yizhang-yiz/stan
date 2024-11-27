@@ -299,10 +299,15 @@ class chainset {
    * @return parameter value at quantile
    */
   double quantile(const int index, const double prob) const {
-    // Ensure the probability is within [0, 1]
     Eigen::MatrixXd draws = samples(index);
     Eigen::Map<Eigen::VectorXd> map(draws.data(), draws.size());
-    return stan::math::quantile(map, prob);
+    double result;
+    try {
+      result = stan::math::quantile(map, prob);
+    } catch (const std::logic_error& e) {
+      return std::numeric_limits<double>::quiet_NaN();
+    }
+    return result;
   }
 
   /**
@@ -332,7 +337,14 @@ class chainset {
     Eigen::MatrixXd draws = samples(index);
     Eigen::Map<Eigen::VectorXd> map(draws.data(), draws.size());
     std::vector<double> probs_vec(probs.data(), probs.data() + probs.size());
-    std::vector<double> quantiles = stan::math::quantile(map, probs_vec);
+    std::vector<double> quantiles;
+    try {
+      quantiles = stan::math::quantile(map, probs_vec);
+    } catch (const std::logic_error& e) {
+      Eigen::VectorXd nans(probs.size());
+      nans.setConstant(std::numeric_limits<double>::quiet_NaN());
+      return nans;
+    }
     return Eigen::Map<Eigen::VectorXd>(quantiles.data(), quantiles.size());
   }
 

@@ -220,6 +220,6 @@ TEST_F(McmcChains, quantile_tests) {
   probs << 0.0, 0.01, 0.05, 0.95, 0.99, 1.0;
   Eigen::VectorXd stepsize_quantiles = datagen_chains.quantiles("stepsize__", probs);
   for (size_t i = 0; i < probs.size(); ++i) {
-    EXPECT_EQ(stepsize_quantiles(i), std::numeric_limits<double>::quiet_NaN());
+    EXPECT_TRUE(std::isnan(stepsize_quantiles(i)));
   }
 }
