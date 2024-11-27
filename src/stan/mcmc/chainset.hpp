@@ -290,7 +290,7 @@ class chainset {
   /**
    * Compute the quantile value of the specified parameter
    * at the specified probability via a call to stan::math::quantile.
-   * 
+   *
    * If the probability is outside of interval [0, 1], or if the
    * sample contains Infs or NaN, will return NaN.
    *
@@ -336,8 +336,8 @@ class chainset {
     bool probs_OK = true;
     for (int i = 0; i < probs.size(); ++i) {
       if (probs(i) < 0 || probs(i) > 1) {
-	probs_OK = false;
-	break;
+        probs_OK = false;
+        break;
       }
     }
     if (!(probs_OK && analyze::is_finite_and_varies(draws))) {
