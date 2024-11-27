@@ -291,8 +291,10 @@ class chainset {
    * Compute the quantile value of the specified parameter
    * at the specified probability via a call to stan::math::quantile.
    *
-   * If the probability is outside of interval [0, 1], or if the
-   * sample contains Infs or NaN, will return NaN.
+   * Calls stan::math::quantile which throws
+   * std::invalid_argument If any element of samples_vec is NaN, or size 0.
+   * and std::domain_error If `p<0` or `p>1`.
+   * If this happens, error will be caught, quantile value is NaN.
    *
    * @param index parameter index
    * @param prob probability
@@ -300,11 +302,14 @@ class chainset {
    */
   double quantile(const int index, const double prob) const {
     Eigen::MatrixXd draws = samples(index);
-    if (prob < 0 || prob > 1 || !analyze::is_finite_and_varies(draws))
-      return std::numeric_limits<double>::quiet_NaN();
-
     Eigen::Map<Eigen::VectorXd> map(draws.data(), draws.size());
-    return stan::math::quantile(map, prob);
+    double result;
+    try {
+      result = stan::math::quantile(map, prob);
+    } catch (const std::logic_error& e) {
+      return std::numeric_limits<double>::quiet_NaN();
+    }
+    return result;
   }
 
   /**
@@ -323,6 +328,11 @@ class chainset {
    * Compute the quantile values of the specified parameter
    * for a set of specified probabilities.
    *
+   * Calls stan::math::quantile which throws
+   * std::invalid_argument If any element of samples_vec is NaN, or size 0.
+   * and std::domain_error If `p<0` or `p>1`.
+   * If this happens, error will be caught, quantile value is NaN.
+   *
    * @param index parameter index
    * @param probs vector of probabilities
    * @return vector of parameter values for quantiles
@@ -332,23 +342,16 @@ class chainset {
     if (probs.size() == 0)
       return Eigen::VectorXd::Zero(0);
     Eigen::MatrixXd draws = samples(index);
-
-    bool probs_OK = true;
-    for (int i = 0; i < probs.size(); ++i) {
-      if (probs(i) < 0 || probs(i) > 1) {
-        probs_OK = false;
-        break;
-      }
-    }
-    if (!(probs_OK && analyze::is_finite_and_varies(draws))) {
+    Eigen::Map<Eigen::VectorXd> map(draws.data(), draws.size());
+    std::vector<double> probs_vec(probs.data(), probs.data() + probs.size());
+    std::vector<double> quantiles;
+    try {
+      quantiles = stan::math::quantile(map, probs_vec);
+    } catch (const std::logic_error& e) {
       Eigen::VectorXd nans(probs.size());
       nans.setConstant(std::numeric_limits<double>::quiet_NaN());
       return nans;
     }
-
-    Eigen::Map<Eigen::VectorXd> map(draws.data(), draws.size());
-    std::vector<double> probs_vec(probs.data(), probs.data() + probs.size());
-    std::vector<double> quantiles = stan::math::quantile(map, probs_vec);
     return Eigen::Map<Eigen::VectorXd>(quantiles.data(), quantiles.size());
   }
 
