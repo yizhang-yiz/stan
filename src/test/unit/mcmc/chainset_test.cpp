@@ -207,3 +207,19 @@ TEST_F(McmcChains, summary_stats) {
     EXPECT_NEAR(theta_ac(i), theta_ac_expect(i), 0.0005);
   }
 }
+
+TEST_F(McmcChains, quantile_tests) {
+  std::ifstream datagen_stream;
+  datagen_stream.open("src/test/unit/mcmc/test_csv_files/datagen_output.csv",
+		      std::ifstream::in);
+  stan::io::stan_csv datagen_csv = stan::io::stan_csv_reader::parse(datagen_stream, &out);
+  datagen_stream.close();
+  stan::mcmc::chainset datagen_chains(datagen_csv);
+  
+  Eigen::VectorXd probs(6);
+  probs << 0.0, 0.01, 0.05, 0.95, 0.99, 1.0;
+  Eigen::VectorXd stepsize_quantiles = datagen_chains.quantiles("stepsize__", probs);
+  for (size_t i = 0; i < probs.size(); ++i) {
+    EXPECT_EQ(stepsize_quantiles(i), std::numeric_limits<double>::quiet_NaN());
+  }
+}
