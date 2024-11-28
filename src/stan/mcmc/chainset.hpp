@@ -253,7 +253,7 @@ class chainset {
   double median(const std::string& name) const { return median(index(name)); }
 
   /**
-   * Compute maximum absolute deviation (mad) for specified parameter.
+   * Compute median absolute deviation (mad) for specified parameter.
    *
    * Follows R implementation:  constant * median(abs(x - center))
    * where the value of center is median(x) and the constant is 1.4826,
@@ -263,7 +263,7 @@ class chainset {
    * @param index parameter index
    * @return sample mad
    */
-  double max_abs_deviation(const int index) const {
+  double med_abs_deviation(const int index) const {
     Eigen::MatrixXd draws = samples(index);
     auto center = median(index);
     Eigen::MatrixXd abs_dev = (draws.array() - center).abs();
@@ -272,7 +272,7 @@ class chainset {
   }
 
   /**
-   * Compute maximum absolute deviation (mad) for specified parameter.
+   * Compute median absolute deviation (mad) for specified parameter.
    *
    * Follows R implementation:  constant * median(abs(x - center))
    * where the value of center is median(x) and the constant is 1.4826,
@@ -282,8 +282,8 @@ class chainset {
    * @param name parameter name
    * @return sample mad
    */
-  double max_abs_deviation(const std::string& name) const {
-    return max_abs_deviation(index(name));
+  double med_abs_deviation(const std::string& name) const {
+    return med_abs_deviation(index(name));
   }
 
   /**

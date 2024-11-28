@@ -170,7 +170,7 @@ TEST_F(McmcChains, summary_stats) {
   EXPECT_NEAR(theta_sd_expect, bern_chains.sd("theta"), 1e-5);
 
   double theta_mad_expect = 0.12309;
-  EXPECT_NEAR(theta_mad_expect, bern_chains.max_abs_deviation("theta"), 1e-5);
+  EXPECT_NEAR(theta_mad_expect, bern_chains.med_abs_deviation("theta"), 1e-5);
 
   double theta_mcse_mean_expect = 0.003234;
   EXPECT_NEAR(theta_mcse_mean_expect, bern_chains.mcse_mean("theta"), 1e-4);
