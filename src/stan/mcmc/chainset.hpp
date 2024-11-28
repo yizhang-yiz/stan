@@ -5,7 +5,6 @@
 #include <stan/math/prim.hpp>
 #include <stan/math/prim/fun/constants.hpp>
 #include <stan/math/prim/fun/quantile.hpp>
-#include <stan/analyze/mcmc/check_chains.hpp>
 #include <stan/analyze/mcmc/split_rank_normalized_ess.hpp>
 #include <stan/analyze/mcmc/split_rank_normalized_rhat.hpp>
 #include <stan/analyze/mcmc/mcse.hpp>

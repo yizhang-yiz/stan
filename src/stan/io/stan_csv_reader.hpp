@@ -335,8 +335,7 @@ class stan_csv_reader {
           std::getline(ls, line, ',');
           boost::trim(line);
 	  try {
-	    auto raw = std::stold(line);
-	    samples(row, col) = static_cast<double>(raw);
+	    samples(row, col) = static_cast<double>(std::stold(line));
 	  } catch (const std::out_of_range &e) {
 	    samples(row, col) = std::numeric_limits<double>::quiet_NaN();
 	  }
