@@ -225,6 +225,9 @@ TEST_F(McmcChains, quantile_tests) {
     EXPECT_TRUE(std::isnan(stepsize_quantiles(i)));
   }
 
+  double stepsize_MAD = datagen_chains.med_abs_deviation("stepsize__");
+  EXPECT_TRUE(std::isnan(stepsize_MAD));
+
   Eigen::VectorXd bad_probs(3);
   bad_probs << 5, 50, 95;
   Eigen::VectorXd y_sim_quantiles
@@ -232,4 +235,5 @@ TEST_F(McmcChains, quantile_tests) {
   for (size_t i = 0; i < bad_probs.size(); ++i) {
     EXPECT_TRUE(std::isnan(y_sim_quantiles(i)));
   }
+
 }

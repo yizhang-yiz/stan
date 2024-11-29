@@ -268,7 +268,11 @@ class chainset {
     auto center = median(index);
     Eigen::MatrixXd abs_dev = (draws.array() - center).abs();
     Eigen::Map<Eigen::VectorXd> map(abs_dev.data(), abs_dev.size());
-    return 1.4826 * stan::math::quantile(map, 0.5);
+    try {
+      return 1.4826 * stan::math::quantile(map, 0.5);
+    } catch (const std::logic_error& e) {
+      return std::numeric_limits<double>::quiet_NaN();
+    }
   }
 
   /**
