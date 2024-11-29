@@ -235,5 +235,4 @@ TEST_F(McmcChains, quantile_tests) {
   for (size_t i = 0; i < bad_probs.size(); ++i) {
     EXPECT_TRUE(std::isnan(y_sim_quantiles(i)));
   }
-
 }
