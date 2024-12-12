@@ -121,6 +121,8 @@ void laplace_sample(const Model& model, const Eigen::VectorXd& theta_hat,
 
     double log_p;
     if (calculate_lp) {
+      // clean up created vars after scope exit
+      stan::math::nested_rev_autodiff stack;
       log_p = log_density_fun(unc_draw).val();
     } else {
       log_p = std::numeric_limits<double>::quiet_NaN();
