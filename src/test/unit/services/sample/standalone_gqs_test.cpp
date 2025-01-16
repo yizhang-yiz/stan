@@ -3,7 +3,7 @@
 #include <iostream>
 #include <stan/callbacks/stream_logger.hpp>
 #include <stan/callbacks/stream_writer.hpp>
-#include <stan/io/dump.hpp>
+#include <stan/io/json/json_data.hpp>
 #include <stan/io/stan_csv_reader.hpp>
 #include <stan/services/error_codes.hpp>
 #include <stan/services/sample/standalone_gqs.hpp>
@@ -19,9 +19,9 @@ class ServicesStandaloneGQ : public ::testing::Test {
 
   void SetUp() {
     std::fstream data_stream(
-        "src/test/test-models/good/services/bernoulli.data.R",
+        "src/test/test-models/good/services/bernoulli.data.json",
         std::fstream::in);
-    stan::io::dump data_var_context(data_stream);
+    stan::json::json_data data_var_context(data_stream);
     data_stream.close();
     model = new stan_model(data_var_context);
   }
@@ -46,14 +46,6 @@ TEST_F(ServicesStandaloneGQ, genDraws_bernoulli) {
   EXPECT_EQ("theta", bern_csv.header[7]);
   ASSERT_EQ(1000, bern_csv.samples.rows());
   ASSERT_EQ(19, bern_csv.samples.cols());
-
-  // model bernoulli.stan has 1 param
-  std::vector<std::string> param_names;
-  std::vector<std::vector<size_t>> param_dimss;
-  stan::services::get_model_parameters(*model, param_names, param_dimss);
-
-  EXPECT_EQ(param_names.size(), 1);
-  EXPECT_EQ(param_dimss.size(), 1);
 
   std::stringstream sample_ss;
   stan::callbacks::stream_writer sample_writer(sample_ss, "");

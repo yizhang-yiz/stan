@@ -1,5 +1,6 @@
 #include <stan/io/stan_csv_reader.hpp>
 #include <test/unit/util.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <gtest/gtest.h>
 #include <fstream>
 #include <sstream>
@@ -12,6 +13,7 @@ class StanIoStanCsvReader : public testing::Test {
     metadata3_stream.open("src/test/unit/io/test_csv_files/metadata3.csv");
     header1_stream.open("src/test/unit/io/test_csv_files/header1.csv");
     header2_stream.open("src/test/unit/io/test_csv_files/header2.csv");
+    header3_stream.open("src/test/unit/io/test_csv_files/header3.csv");
     adaptation1_stream.open("src/test/unit/io/test_csv_files/adaptation1.csv");
     samples1_stream.open("src/test/unit/io/test_csv_files/samples1.csv");
 
@@ -21,6 +23,15 @@ class StanIoStanCsvReader : public testing::Test {
         "src/test/unit/io/test_csv_files/blocker_nondiag.0.csv");
     eight_schools_stream.open(
         "src/test/unit/io/test_csv_files/eight_schools.csv");
+
+    bernoulli_thin_stream.open(
+        "src/test/unit/io/test_csv_files/bernoulli_thin.csv");
+    bernoulli_warmup_stream.open(
+        "src/test/unit/io/test_csv_files/bernoulli_warmup.csv");
+    fixed_param_stream.open(
+        "src/test/unit/io/test_csv_files/fixed_param_output.csv");
+    no_params_stream.open(
+        "src/test/unit/io/test_csv_files/no_parameters_hmc.csv");
   }
 
   void TearDown() {
@@ -29,12 +40,15 @@ class StanIoStanCsvReader : public testing::Test {
     metadata3_stream.close();
     header1_stream.close();
     header2_stream.close();
+    header3_stream.close();
     adaptation1_stream.close();
     samples1_stream.close();
-
     epil0_stream.close();
-
     blocker_nondiag0_stream.close();
+    bernoulli_thin_stream.close();
+    bernoulli_warmup_stream.close();
+    fixed_param_stream.close();
+    no_params_stream.close();
   }
 
   std::ifstream blocker0_stream, epil0_stream;
@@ -43,12 +57,16 @@ class StanIoStanCsvReader : public testing::Test {
       samples1_stream;
   std::ifstream metadata3_stream, header2_stream;
   std::ifstream eight_schools_stream;
+  std::ifstream header3_stream;
+  std::ifstream bernoulli_thin_stream;
+  std::ifstream bernoulli_warmup_stream;
+  std::ifstream fixed_param_stream;
+  std::ifstream no_params_stream;
 };
 
 TEST_F(StanIoStanCsvReader, read_metadata1) {
   stan::io::stan_csv_metadata metadata;
-  EXPECT_TRUE(
-      stan::io::stan_csv_reader::read_metadata(metadata1_stream, metadata, 0));
+  stan::io::stan_csv_reader::read_metadata(metadata1_stream, metadata);
 
   EXPECT_EQ(2, metadata.stan_version_major);
   EXPECT_EQ(9, metadata.stan_version_minor);
@@ -74,8 +92,7 @@ TEST_F(StanIoStanCsvReader, read_metadata1) {
 
 TEST_F(StanIoStanCsvReader, read_metadata3) {
   stan::io::stan_csv_metadata metadata;
-  EXPECT_TRUE(
-      stan::io::stan_csv_reader::read_metadata(metadata3_stream, metadata, 0));
+  stan::io::stan_csv_reader::read_metadata(metadata3_stream, metadata);
 
   EXPECT_EQ(2, metadata.stan_version_major);
   EXPECT_EQ(9, metadata.stan_version_minor);
@@ -101,8 +118,7 @@ TEST_F(StanIoStanCsvReader, read_metadata3) {
 
 TEST_F(StanIoStanCsvReader, read_header1) {
   std::vector<std::string> header;
-  EXPECT_TRUE(
-      stan::io::stan_csv_reader::read_header(header1_stream, header, 0));
+  EXPECT_TRUE(stan::io::stan_csv_reader::read_header(header1_stream, header));
 
   ASSERT_EQ(55, header.size());
   EXPECT_EQ("lp__", header[0]);
@@ -129,8 +145,7 @@ TEST_F(StanIoStanCsvReader, read_header1) {
 
 TEST_F(StanIoStanCsvReader, read_header2) {
   std::vector<std::string> header;
-  EXPECT_TRUE(
-      stan::io::stan_csv_reader::read_header(header2_stream, header, 0));
+  EXPECT_TRUE(stan::io::stan_csv_reader::read_header(header2_stream, header));
 
   ASSERT_EQ(5, header.size());
   EXPECT_EQ("d", header[0]);
@@ -142,10 +157,42 @@ TEST_F(StanIoStanCsvReader, read_header2) {
   }
 }
 
+TEST_F(StanIoStanCsvReader, read_header_tuples) {
+  std::vector<std::string> header;
+  EXPECT_TRUE(stan::io::stan_csv_reader::read_header(header3_stream, header));
+
+  ASSERT_EQ(46, header.size());
+
+  // skip lp__ etc
+  int headeridx = 7;
+
+  for (int outer = 1; outer <= 3; ++outer) {
+    std::stringstream scalar;
+    scalar << "complicated[" << outer << "]"
+           << "." << 1;
+    EXPECT_EQ(scalar.str(), header[headeridx++]);
+
+    for (int inner = 1; inner <= 4; ++inner) {
+      std::stringstream inner_scalar;
+      inner_scalar << "complicated[" << outer << "]"
+                   << "." << 2 << "[" << inner << "]"
+                   << "." << 1;
+      EXPECT_EQ(inner_scalar.str(), header[headeridx++]);
+
+      for (int matrix_columns = 1; matrix_columns <= 2; ++matrix_columns) {
+        std::stringstream matrix;
+        matrix << "complicated[" << outer << "]"
+               << "." << 2 << "[" << inner << "]"
+               << "." << 2 << "[" << 1 << "," << matrix_columns << "]";
+        EXPECT_EQ(matrix.str(), header[headeridx++]);
+      }
+    }
+  }
+}
+
 TEST_F(StanIoStanCsvReader, read_adaptation1) {
   stan::io::stan_csv_adaptation adaptation;
-  EXPECT_TRUE(stan::io::stan_csv_reader::read_adaptation(adaptation1_stream,
-                                                         adaptation, 0));
+  stan::io::stan_csv_reader::read_adaptation(adaptation1_stream, adaptation);
 
   EXPECT_FLOAT_EQ(0.118745, adaptation.step_size);
   ASSERT_EQ(47, adaptation.metric.size());
@@ -203,7 +250,7 @@ TEST_F(StanIoStanCsvReader, read_samples1) {
   stan::io::stan_csv_timing timing;
 
   EXPECT_TRUE(stan::io::stan_csv_reader::read_samples(samples1_stream, samples,
-                                                      timing, 0));
+                                                      timing));
 
   ASSERT_EQ(5, samples.rows());
   ASSERT_EQ(55, samples.cols());
@@ -499,4 +546,72 @@ TEST_F(StanIoStanCsvReader, ParseEightSchools) {
   EXPECT_FLOAT_EQ(0.063405, eight_schools.timing.sampling);
 
   EXPECT_EQ("", out.str());
+}
+
+TEST_F(StanIoStanCsvReader, skip_warmup) {
+  stan::io::stan_csv bernoulli_warmup;
+  std::stringstream out;
+  bernoulli_warmup
+      = stan::io::stan_csv_reader::parse(bernoulli_warmup_stream, &out);
+  ASSERT_EQ(1000, bernoulli_warmup.samples.rows());
+  ASSERT_EQ(1000, bernoulli_warmup.metadata.num_warmup);
+  ASSERT_EQ(1000, bernoulli_warmup.metadata.num_samples);
+  ASSERT_NE(0, bernoulli_warmup.adaptation.step_size);
+}
+
+TEST_F(StanIoStanCsvReader, thinned_data) {
+  stan::io::stan_csv bernoulli_thin;
+  std::stringstream out;
+  bernoulli_thin
+      = stan::io::stan_csv_reader::parse(bernoulli_thin_stream, &out);
+  ASSERT_EQ(1000, bernoulli_thin.samples.rows());
+}
+
+TEST_F(StanIoStanCsvReader, fixed_param) {
+  stan::io::stan_csv fixed_param;
+  std::stringstream out;
+  fixed_param = stan::io::stan_csv_reader::parse(fixed_param_stream, &out);
+  ASSERT_EQ(10, fixed_param.samples.rows());
+}
+
+TEST_F(StanIoStanCsvReader, no_parameters) {
+  stan::io::stan_csv no_parameters_hmc;
+  std::stringstream out;
+  no_parameters_hmc = stan::io::stan_csv_reader::parse(no_params_stream, &out);
+  ASSERT_EQ(100, no_parameters_hmc.samples.rows());
+  ASSERT_EQ(0, no_parameters_hmc.adaptation.metric.size());
+}
+
+TEST_F(StanIoStanCsvReader, no_samples) {
+  std::ifstream no_samples_stream;
+  no_samples_stream.open(
+      "src/test/unit/io/test_csv_files/bernoulli_no_samples.csv");
+  std::stringstream out;
+  stan::io::stan_csv no_samples
+      = stan::io::stan_csv_reader::parse(no_samples_stream, &out);
+  no_samples_stream.close();
+  ASSERT_EQ(out.str(), "No draws found\n");
+}
+
+TEST_F(StanIoStanCsvReader, variational) {
+  std::ifstream variational_stream;
+  variational_stream.open(
+      "src/test/unit/io/test_csv_files/bernoulli_variational.csv");
+  std::stringstream out;
+  stan::io::stan_csv variational
+      = stan::io::stan_csv_reader::parse(variational_stream, &out);
+  variational_stream.close();
+  ASSERT_EQ(1000, variational.metadata.num_samples);
+  ASSERT_EQ(0, variational.adaptation.metric.size());
+}
+
+TEST_F(StanIoStanCsvReader, read_nans) {
+  std::ifstream datagen_stream;
+  datagen_stream.open("src/test/unit/mcmc/test_csv_files/datagen_output.csv",
+                      std::ifstream::in);
+  std::stringstream out;
+  stan::io::stan_csv datagen
+      = stan::io::stan_csv_reader::parse(datagen_stream, &out);
+  datagen_stream.close();
+  ASSERT_TRUE(std::isnan(datagen.samples(0, 2)));
 }

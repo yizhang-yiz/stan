@@ -20,7 +20,7 @@ class throwing_model : public stan::model::model_base_crtp<throwing_model> {
 
   std::string model_name() const final { return "throwing_model"; }
 
-  std::vector<std::string> model_compile_info() const {
+  std::vector<std::string> model_compile_info() const override {
     std::vector<std::string> stanc_info;
     stanc_info.push_back("stanc_version = stanc3 e010e06c");
     stanc_info.push_back("stancflags = ");
@@ -57,14 +57,18 @@ class throwing_model : public stan::model::model_base_crtp<throwing_model> {
 
   }  // transform_inits()
 
-  inline void get_param_names(std::vector<std::string>& names__) const {
+  inline void get_param_names(std::vector<std::string>& names__,
+                              bool include_tparams = true,
+                              bool include_gqs = true) const {
     names__.clear();
     names__.emplace_back("y");
     names__.emplace_back("z");
     names__.emplace_back("xgq");
   }  // get_param_names()
 
-  inline void get_dims(std::vector<std::vector<size_t>>& dimss__) const final {
+  inline void get_dims(std::vector<std::vector<size_t>>& dimss__,
+                       bool include_tparams = true,
+                       bool include_gqs = true) const final {
     dimss__.clear();
     dimss__.emplace_back(std::vector<size_t>{static_cast<size_t>(2)});
 
@@ -145,6 +149,13 @@ class throwing_model : public stan::model::model_base_crtp<throwing_model> {
       const stan::io::var_context& context,
       Eigen::Matrix<double, Eigen::Dynamic, 1>& params_r,
       std::ostream* pstream__ = nullptr) const {}
+
+  void unconstrain_array(const Eigen::VectorXd& params_constrained_r,
+                         Eigen::VectorXd& params_r,
+                         std::ostream* msgs = nullptr) const override {}
+  void unconstrain_array(const std::vector<double>& params_constrained_r,
+                         std::vector<double>& params_r,
+                         std::ostream* msgs = nullptr) const override {}
 };
 }  // namespace test
 
@@ -236,7 +247,7 @@ TEST_F(ServicesUtil, write_sample_names) {
 }
 
 TEST_F(ServicesUtil, write_sample_params) {
-  boost::ecuyer1988 rng = stan::services::util::create_rng(0, 1);
+  stan::rng_t rng = stan::services::util::create_rng(0, 1);
   Eigen::VectorXd x = Eigen::VectorXd::Zero(2);
   stan::mcmc::sample sample(x, 1, 2);
   mock_sampler sampler;
@@ -303,7 +314,7 @@ TEST_F(ServicesUtil, write_timing) {
 }
 
 TEST_F(ServicesUtil, throwing_model__write_sample_parameters) {
-  boost::ecuyer1988 rng = stan::services::util::create_rng(0, 1);
+  stan::rng_t rng = stan::services::util::create_rng(0, 1);
   Eigen::VectorXd x = Eigen::VectorXd::Zero(2);
   stan::mcmc::sample sample(x, 1, 2);
   mock_sampler sampler;

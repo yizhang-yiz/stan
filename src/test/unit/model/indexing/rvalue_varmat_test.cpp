@@ -1,12 +1,12 @@
+#include <stan/model/indexing.hpp>
+#include <stan/math/rev/fun/sum.hpp>
+#include <stan/math/prim/fun/eval.hpp>
+#include <test/unit/util.hpp>
+#include <test/unit/model/indexing/util.hpp>
+#include <gtest/gtest.h>
 #include <iostream>
 #include <stdexcept>
 #include <vector>
-#include <stan/model/indexing/rvalue.hpp>
-#include <stan/model/indexing/rvalue_varmat.hpp>
-#include <test/unit/util.hpp>
-#include <test/unit/model/indexing/util.hpp>
-#include <stan/math.hpp>
-#include <gtest/gtest.h>
 
 using stan::model::index_max;
 using stan::model::index_min;
@@ -247,19 +247,23 @@ TEST_F(RvalueRev, negative_min_max_vec) {
       var_value<Eigen::VectorXd> x(x_val);
       var_value<Eigen::VectorXd> rx
           = rvalue(x, "", index_min_max(mn + 1, mx + 1));
-      EXPECT_FLOAT_EQ(mn - mx + 1, rx.size());
-      for (int n = mn; n <= mx; ++n) {
-        EXPECT_FLOAT_EQ(x.val()[n], rx.val()[n - mn]);
-      }
-      sum(rx).grad();
-      for (int n = mn; n <= mx; ++n) {
-        EXPECT_FLOAT_EQ(x.adj()[n], rx.adj()[n - mn]);
+      if (mn == mx) {
+        EXPECT_EQ(1U, rx.size());
+        for (int n = mn; n <= mx; ++n) {
+          EXPECT_FLOAT_EQ(x.val()[n], rx.val()[n - mn]);
+        }
+        sum(rx).grad();
+        for (int n = mn; n <= mx; ++n) {
+          EXPECT_FLOAT_EQ(x.adj()[n], rx.adj()[n - mn]);
+        }
+      } else {
+        EXPECT_EQ(0U, rx.size());
       }
       stan::math::recover_memory();
     }
   }
   var_value<Eigen::VectorXd> x(x_val);
-  test_throw_out_of_range(x, index_min_max(2, 0));
+  EXPECT_NO_THROW(rvalue(x, "", index_min_max(2, 0)));
   test_throw_out_of_range(x, index_min_max(5, 2));
 }
 
@@ -368,13 +372,8 @@ TEST_F(RvalueRev, uni_stdvec_negative_minmax_vec) {
   auto x = make_std_varvec();
   var_value<Eigen::VectorXd> y
       = rvalue(x, "", index_uni(2), index_min_max(2, 1));
-  EXPECT_EQ(2, y.size());
-  EXPECT_FLOAT_EQ(1.1, y.val()[0]);
-  sum(y).grad();
-  auto i_check = [](Eigen::Index i) { return i == 1; };
-  auto j_check = [](Eigen::Index j) { return j == 0 || j == 1; };
-  check_std_vec_adjs(i_check, j_check, x);
-  test_throw_out_of_range(x, index_uni(1), index_min_max(3, 0));
+  EXPECT_EQ(0U, y.size());
+  EXPECT_NO_THROW(rvalue(x, "", index_uni(1), index_min_max(3, 0)));
   test_throw_out_of_range(x, index_uni(1), index_min_max(15, 2));
 }
 TEST_F(RvalueRev, uni_stdvec_omni_vec) {
@@ -415,9 +414,9 @@ TEST_F(RvalueRev, uni_mat) {
   using Eigen::VectorXd;
   using stan::math::sum;
   using stan::math::var_value;
-  using stan::model::test::generate_linear_var_matrix;
+  using stan::model::test::conditionally_generate_linear_var_matrix;
 
-  auto x = generate_linear_var_matrix(4, 3);
+  auto x = conditionally_generate_linear_var_matrix(4, 3);
 
   var_value<Eigen::RowVectorXd> y = rvalue(x, "", index_uni(1));
   EXPECT_EQ(3, y.size());
@@ -434,7 +433,7 @@ TEST_F(RvalueRev, uni_mat) {
 }
 
 TEST_F(RvalueRev, uni_uni_mat) {
-  using stan::model::test::check_matrix_adjs;
+  using stan::model::test::check_adjs;
   Eigen::MatrixXd x_val(3, 4);
   x_val << 0.0, 0.1, 0.2, 0.3, 1.0, 1.1, 1.2, 1.3, 2.0, 2.1, 2.2, 2.3;
   for (int m = 0; m < 3; ++m) {
@@ -445,7 +444,7 @@ TEST_F(RvalueRev, uni_uni_mat) {
       x_sub.grad();
       auto check_i = [m](int i) { return m == i; };
       auto check_j = [n](int j) { return n == j; };
-      check_matrix_adjs(check_i, check_j, x);
+      check_adjs(check_i, check_j, x);
       stan::math::recover_memory();
     }
   }
@@ -462,9 +461,9 @@ TEST_F(RvalueRev, omni_uni_mat) {
   using Eigen::VectorXd;
   using stan::math::sum;
   using stan::math::var_value;
-  using stan::model::test::generate_linear_var_matrix;
+  using stan::model::test::conditionally_generate_linear_var_matrix;
 
-  auto x = generate_linear_var_matrix(3, 4);
+  auto x = conditionally_generate_linear_var_matrix(3, 4);
   var_value<Eigen::VectorXd> y = rvalue(x, "", index_omni(), index_uni(2));
   EXPECT_EQ(3, y.size());
   EXPECT_MATRIX_EQ(y.val(), x.val().col(1));
@@ -481,11 +480,11 @@ TEST_F(RvalueRev, omni_uni_mat) {
 TEST_F(RvalueRev, multi_uni_matrix) {
   using stan::math::sum;
   using stan::math::var_value;
-  using stan::model::test::check_matrix_adjs;
-  using stan::model::test::generate_linear_var_matrix;
-  using stan::model::test::generate_linear_var_vector;
+  using stan::model::test::check_adjs;
+  using stan::model::test::conditionally_generate_linear_var_matrix;
+  using stan::model::test::conditionally_generate_linear_var_vector;
 
-  auto x = generate_linear_var_matrix(3, 4);
+  auto x = conditionally_generate_linear_var_matrix(3, 4);
   std::vector<int> ns{3, 1, 1};
   var_value<Eigen::VectorXd> y = rvalue(x, "", index_multi(ns), index_uni(3));
   EXPECT_FLOAT_EQ(y.val()(0), x.val()(2, 2));
@@ -511,9 +510,9 @@ TEST_F(RvalueRev, min_uni_mat) {
   using Eigen::VectorXd;
   using stan::math::sum;
   using stan::math::var_value;
-  using stan::model::test::generate_linear_var_matrix;
+  using stan::model::test::conditionally_generate_linear_var_matrix;
 
-  auto x = generate_linear_var_matrix(3, 4);
+  auto x = conditionally_generate_linear_var_matrix(3, 4);
   var_value<Eigen::VectorXd> y = rvalue(x, "", index_min(2), index_uni(3));
   EXPECT_EQ(2, y.size());
   EXPECT_MATRIX_EQ(y.val(), x.val().col(2).segment(1, 2));
@@ -533,9 +532,9 @@ TEST_F(RvalueRev, min_uni_mat) {
 TEST_F(RvalueRev, minmax_uni_matrix) {
   using stan::math::sum;
   using stan::math::var_value;
-  using stan::model::test::generate_linear_var_matrix;
+  using stan::model::test::conditionally_generate_linear_var_matrix;
 
-  auto x = generate_linear_var_matrix(3, 4);
+  auto x = conditionally_generate_linear_var_matrix(3, 4);
   var_value<Eigen::VectorXd> y
       = rvalue(x, "", index_min_max(2, 3), index_uni(4));
   EXPECT_MATRIX_EQ(y.val(), x.val().col(3).segment(1, 2));
@@ -553,21 +552,17 @@ TEST_F(RvalueRev, minmax_uni_matrix) {
 TEST_F(RvalueRev, negative_minmax_uni_matrix) {
   using stan::math::sum;
   using stan::math::var_value;
-  using stan::model::test::generate_linear_var_matrix;
+  using stan::model::test::conditionally_generate_linear_var_matrix;
 
-  auto x = generate_linear_var_matrix(3, 4);
+  auto x = conditionally_generate_linear_var_matrix(3, 4);
   var_value<Eigen::VectorXd> y
       = rvalue(x, "", index_min_max(3, 2), index_uni(4));
-  EXPECT_MATRIX_EQ(y.val(), x.val().col(3).segment(1, 2).reverse());
-  sum(y).grad();
-  Eigen::MatrixXd exp_adj = Eigen::MatrixXd::Zero(3, 4);
-  exp_adj.col(3).segment(1, 2).reverse().array() += 1;
-  EXPECT_MATRIX_EQ(x.adj(), exp_adj);
-  EXPECT_MATRIX_EQ(y.adj(), Eigen::VectorXd::Ones(2));
+  EXPECT_EQ(0U, y.rows());
+  EXPECT_EQ(1U, y.cols());
   test_throw_out_of_range(x, index_min_max(3, 2), index_uni(0));
   test_throw_out_of_range(x, index_min_max(3, 2), index_uni(5));
-  test_throw_out_of_range(x, index_min_max(1, 0), index_uni(4));
   test_throw_out_of_range(x, index_min_max(6, 1), index_uni(4));
+  EXPECT_NO_THROW(rvalue(x, "", index_min_max(1, 0), index_uni(4)));
 }
 
 // multi
@@ -577,9 +572,9 @@ TEST_F(RvalueRev, multi_mat) {
   using Eigen::VectorXd;
   using stan::math::var_value;
 
-  using stan::model::test::generate_linear_var_matrix;
+  using stan::model::test::conditionally_generate_linear_var_matrix;
 
-  auto x = generate_linear_var_matrix(4, 3);
+  auto x = conditionally_generate_linear_var_matrix(4, 3);
   std::vector<int> row_idx{3, 4, 1, 4, 1, 4, 1};
   var_value<Eigen::MatrixXd> y = rvalue(x, "", index_multi(row_idx));
   EXPECT_FLOAT_EQ(7, y.rows());
@@ -612,10 +607,10 @@ TEST_F(RvalueRev, multi_mat) {
 TEST_F(RvalueRev, uni_multi_matrix) {
   using stan::math::sum;
   using stan::math::var_value;
-  using stan::model::test::generate_linear_var_matrix;
-  using stan::model::test::generate_linear_var_vector;
+  using stan::model::test::conditionally_generate_linear_var_matrix;
+  using stan::model::test::conditionally_generate_linear_var_vector;
 
-  auto x = generate_linear_var_matrix(5, 5);
+  auto x = conditionally_generate_linear_var_matrix(5, 5);
   std::vector<int> ns{4, 1, 3, 3};
   var_value<Eigen::RowVectorXd> y
       = rvalue(x, "", index_uni(3), index_multi(ns));
@@ -682,10 +677,10 @@ TEST_F(RvalueRev, multi_multi_mat) {
 TEST_F(RvalueRev, minmax_multi_matrix) {
   using stan::math::sum;
   using stan::math::var_value;
-  using stan::model::test::generate_linear_var_matrix;
-  using stan::model::test::generate_linear_var_vector;
+  using stan::model::test::conditionally_generate_linear_var_matrix;
+  using stan::model::test::conditionally_generate_linear_var_vector;
 
-  auto x = generate_linear_var_matrix(5, 5);
+  auto x = conditionally_generate_linear_var_matrix(5, 5);
   std::vector<int> ns{4, 1, 3, 3};
   var_value<Eigen::MatrixXd> y
       = rvalue(x, "", index_min_max(1, 3), index_multi(ns));
@@ -715,9 +710,9 @@ TEST_F(RvalueRev, omni_mat) {
   using Eigen::VectorXd;
   using stan::math::sum;
   using stan::math::var_value;
-  using stan::model::test::generate_linear_var_matrix;
+  using stan::model::test::conditionally_generate_linear_var_matrix;
 
-  auto x = generate_linear_var_matrix(4, 3);
+  auto x = conditionally_generate_linear_var_matrix(4, 3);
   var_value<Eigen::MatrixXd> y = rvalue(x, "", index_omni());
   EXPECT_EQ(4, y.rows());
   EXPECT_EQ(3, y.cols());
@@ -733,9 +728,9 @@ TEST_F(RvalueRev, uni_omni_mat) {
   using Eigen::RowVectorXd;
   using stan::math::sum;
   using stan::math::var_value;
-  using stan::model::test::generate_linear_var_matrix;
+  using stan::model::test::conditionally_generate_linear_var_matrix;
 
-  auto x = generate_linear_var_matrix(3, 4);
+  auto x = conditionally_generate_linear_var_matrix(3, 4);
   var_value<Eigen::RowVectorXd> y = rvalue(x, "", index_uni(2), index_omni());
   EXPECT_EQ(4, y.size());
   EXPECT_MATRIX_EQ(y.val(), x.val().row(1));
@@ -755,9 +750,9 @@ TEST_F(RvalueRev, omni_omni_mat) {
   using Eigen::VectorXd;
   using stan::math::sum;
   using stan::math::var_value;
-  using stan::model::test::generate_linear_var_matrix;
+  using stan::model::test::conditionally_generate_linear_var_matrix;
 
-  auto x = generate_linear_var_matrix(3, 4);
+  auto x = conditionally_generate_linear_var_matrix(3, 4);
   var_value<Eigen::MatrixXd> y = rvalue(x, "", index_omni(), index_omni());
   EXPECT_EQ(x.rows(), y.rows());
   EXPECT_EQ(x.cols(), y.cols());
@@ -775,9 +770,9 @@ TEST_F(RvalueRev, min_mat) {
   using Eigen::VectorXd;
   using stan::math::sum;
   using stan::math::var_value;
-  using stan::model::test::generate_linear_var_matrix;
+  using stan::model::test::conditionally_generate_linear_var_matrix;
 
-  auto x = generate_linear_var_matrix(4, 3);
+  auto x = conditionally_generate_linear_var_matrix(4, 3);
   var_value<Eigen::MatrixXd> y = rvalue(x, "", index_min(3));
   EXPECT_EQ(2, y.rows());
   EXPECT_EQ(3, y.cols());
@@ -797,9 +792,9 @@ TEST_F(RvalueRev, uni_min_mat) {
   using Eigen::RowVectorXd;
   using stan::math::sum;
   using stan::math::var_value;
-  using stan::model::test::generate_linear_var_matrix;
+  using stan::model::test::conditionally_generate_linear_var_matrix;
 
-  auto x = generate_linear_var_matrix(3, 4);
+  auto x = conditionally_generate_linear_var_matrix(3, 4);
   var_value<Eigen::RowVectorXd> y = rvalue(x, "", index_uni(3), index_min(2));
   EXPECT_EQ(3, y.size());
   EXPECT_MATRIX_EQ(y.val(), x.val().row(2).segment(1, 3));
@@ -821,8 +816,8 @@ TEST_F(RvalueRev, min_min_mat) {
   using Eigen::VectorXd;
   using stan::math::sum;
   using stan::math::var_value;
-  using stan::model::test::generate_linear_var_matrix;
-  auto x = generate_linear_var_matrix(3, 4);
+  using stan::model::test::conditionally_generate_linear_var_matrix;
+  auto x = conditionally_generate_linear_var_matrix(3, 4);
   stan::math::var_value<Eigen::MatrixXd> y
       = rvalue(x, "", index_min(2), index_min(3));
   EXPECT_EQ(2, y.rows());
@@ -843,9 +838,9 @@ TEST_F(RvalueRev, min_min_mat) {
 TEST_F(RvalueRev, minmax_min_matrix) {
   using stan::math::sum;
   using stan::math::var_value;
-  using stan::model::test::generate_linear_var_matrix;
+  using stan::model::test::conditionally_generate_linear_var_matrix;
 
-  auto x = generate_linear_var_matrix(3, 4);
+  auto x = conditionally_generate_linear_var_matrix(3, 4);
   var_value<Eigen::MatrixXd> y
       = rvalue(x, "", index_min_max(2, 3), index_min(2));
   EXPECT_MATRIX_EQ(y.val(), x.val().block(1, 1, 2, 3));
@@ -868,9 +863,9 @@ TEST_F(RvalueRev, max_mat) {
   using Eigen::VectorXd;
   using stan::math::sum;
   using stan::math::var_value;
-  using stan::model::test::generate_linear_var_matrix;
+  using stan::model::test::conditionally_generate_linear_var_matrix;
 
-  auto x = generate_linear_var_matrix(4, 3);
+  auto x = conditionally_generate_linear_var_matrix(4, 3);
   var_value<Eigen::MatrixXd> y = rvalue(x, "", index_max(2));
   EXPECT_EQ(2, y.rows());
   EXPECT_EQ(3, y.cols());
@@ -881,16 +876,16 @@ TEST_F(RvalueRev, max_mat) {
   x_exp_adj.block(0, 0, 2, 3) = y_exp_adj;
   EXPECT_MATRIX_EQ(x.adj(), x_exp_adj);
   EXPECT_MATRIX_EQ(y.adj(), y_exp_adj);
-  test_throw_out_of_range(x, index_max(0));
+  EXPECT_NO_THROW(rvalue(x, "", index_max(0)));
   test_throw_out_of_range(x, index_max(15));
 }
 
 TEST_F(RvalueRev, min_max_matrix) {
   using stan::math::sum;
   using stan::math::var_value;
-  using stan::model::test::generate_linear_var_matrix;
+  using stan::model::test::conditionally_generate_linear_var_matrix;
 
-  auto x = generate_linear_var_matrix(3, 4);
+  auto x = conditionally_generate_linear_var_matrix(3, 4);
   var_value<Eigen::MatrixXd> y = rvalue(x, "", index_min(2), index_max(2));
   EXPECT_MATRIX_EQ(y.val(), x.val().block(1, 0, 2, 2));
   sum(y).grad();
@@ -901,8 +896,8 @@ TEST_F(RvalueRev, min_max_matrix) {
   EXPECT_MATRIX_EQ(y.adj(), y_exp_adj);
   test_throw_out_of_range(x, index_min(0), index_max(2));
   test_throw_out_of_range(x, index_min(12), index_max(3));
-  test_throw_out_of_range(x, index_min(2), index_max(0));
   test_throw_out_of_range(x, index_min(2), index_max(12));
+  EXPECT_NO_THROW(rvalue(x, "", index_min(2), index_max(0)));
 }
 
 // minmax
@@ -912,9 +907,9 @@ TEST_F(RvalueRev, positive_min_max_mat) {
   using Eigen::VectorXd;
   using stan::math::sum;
   using stan::math::var_value;
-  using stan::model::test::generate_linear_var_matrix;
+  using stan::model::test::conditionally_generate_linear_var_matrix;
 
-  auto x = generate_linear_var_matrix(4, 3);
+  auto x = conditionally_generate_linear_var_matrix(4, 3);
   var_value<Eigen::MatrixXd> y = rvalue(x, "", index_min_max(2, 3));
   EXPECT_EQ(2, y.rows());
   EXPECT_EQ(3, y.cols());
@@ -936,27 +931,20 @@ TEST_F(RvalueRev, negative_min_max_mat) {
   using Eigen::VectorXd;
   using stan::math::sum;
   using stan::math::var_value;
-  using stan::model::test::generate_linear_var_matrix;
+  using stan::model::test::conditionally_generate_linear_var_matrix;
 
-  auto x = generate_linear_var_matrix(3, 4);
+  auto x = conditionally_generate_linear_var_matrix(3, 4);
   var_value<Eigen::MatrixXd> y = rvalue(x, "", index_min_max(3, 2));
-  EXPECT_EQ(2, y.rows());
+  EXPECT_EQ(0, y.rows());
   EXPECT_EQ(4, y.cols());
-  EXPECT_MATRIX_EQ(y.val(), x.val().block(1, 0, 2, 4).colwise().reverse());
-  sum(y).grad();
-  Eigen::MatrixXd x_exp_adj = Eigen::MatrixXd::Zero(3, 4);
-  Eigen::MatrixXd y_exp_adj = Eigen::MatrixXd::Ones(2, 4);
-  x_exp_adj.block(1, 0, 2, 4).colwise().reverse() = y_exp_adj;
-  EXPECT_MATRIX_EQ(x.adj(), x_exp_adj);
-  EXPECT_MATRIX_EQ(y.adj(), y_exp_adj);
-  test_throw_out_of_range(x, index_min_max(3, 0));
+  EXPECT_NO_THROW(rvalue(x, "", index_min_max(3, 0)));
   test_throw_out_of_range(x, index_min_max(15, 2));
 }
 
 TEST_F(RvalueRev, positive_minmax_positive_minmax_matrix) {
   using stan::math::sum;
   using stan::math::var_value;
-  using stan::model::test::generate_linear_var_matrix;
+  using stan::model::test::conditionally_generate_linear_var_matrix;
   Eigen::MatrixXd x_val(5, 5);
   for (int i = 0; i < x_val.size(); ++i) {
     x_val(i) = i;
@@ -992,14 +980,12 @@ TEST_F(RvalueRev, positive_minmax_negative_minmax_matrix) {
     const int ii = i + 1;
     var_value<Eigen::MatrixXd> y
         = rvalue(x, "", index_min_max(1, ii), index_min_max(ii, 1));
-    EXPECT_MATRIX_EQ(y.val(), x.val().block(0, 0, ii, ii).rowwise().reverse());
-    sum(y).grad();
-    Eigen::MatrixXd x_exp_adjs = Eigen::MatrixXd::Zero(5, 5);
-    Eigen::MatrixXd y_exp_adjs = Eigen::MatrixXd::Ones(ii, ii);
-    x_exp_adjs.block(0, 0, ii, ii) = y_exp_adjs;
-    EXPECT_MATRIX_EQ(x.adj(), x_exp_adjs);
-    EXPECT_MATRIX_EQ(y.adj(), y_exp_adjs);
-    stan::math::recover_memory();
+    EXPECT_EQ(ii, y.rows());
+    if (ii == 1) {
+      EXPECT_EQ(1, y.cols());
+    } else {
+      EXPECT_EQ(0, y.cols());
+    }
   }
 }
 
@@ -1017,14 +1003,12 @@ TEST_F(RvalueRev, negative_minmax_positive_minmax_matrix) {
     const int ii = i + 1;
     var_value<Eigen::MatrixXd> y
         = rvalue(x, "", index_min_max(ii, 1), index_min_max(1, ii));
-    EXPECT_MATRIX_EQ(y.val(), x.val().block(0, 0, ii, ii).colwise().reverse());
-    sum(y).grad();
-    Eigen::MatrixXd x_exp_adjs = Eigen::MatrixXd::Zero(5, 5);
-    Eigen::MatrixXd y_exp_adjs = Eigen::MatrixXd::Ones(ii, ii);
-    x_exp_adjs.block(0, 0, ii, ii) = y_exp_adjs;
-    EXPECT_MATRIX_EQ(x.adj(), x_exp_adjs);
-    EXPECT_MATRIX_EQ(y.adj(), y_exp_adjs);
-    stan::math::recover_memory();
+    if (ii == 1) {
+      EXPECT_EQ(1U, y.rows());
+    } else {
+      EXPECT_EQ(0U, y.rows());
+    }
+    EXPECT_EQ(ii, y.cols());
   }
 }
 
@@ -1042,26 +1026,23 @@ TEST_F(RvalueRev, negative_minmax_negative_minmax_matrix) {
     const int ii = i + 1;
     var_value<Eigen::MatrixXd> y
         = rvalue(x, "", index_min_max(ii, 1), index_min_max(ii, 1));
-    EXPECT_MATRIX_EQ(
-        y.val(),
-        x.val().block(0, 0, ii, ii).colwise().reverse().rowwise().reverse());
-    sum(y).grad();
-    Eigen::MatrixXd x_exp_adjs = Eigen::MatrixXd::Zero(5, 5);
-    Eigen::MatrixXd y_exp_adjs = Eigen::MatrixXd::Ones(ii, ii);
-    x_exp_adjs.block(0, 0, ii, ii) = y_exp_adjs;
-    EXPECT_MATRIX_EQ(x.adj(), x_exp_adjs);
-    EXPECT_MATRIX_EQ(y.adj(), y_exp_adjs);
-    stan::math::recover_memory();
+    if (ii == 1) {
+      EXPECT_EQ(1, y.rows());
+      EXPECT_EQ(1, y.cols());
+    } else {
+      EXPECT_EQ(0, y.rows());
+      EXPECT_EQ(0, y.cols());
+    }
   }
 }
 
 TEST_F(RvalueRev, uni_minmax_matrix) {
   using stan::math::sum;
   using stan::math::var_value;
-  using stan::model::test::generate_linear_var_matrix;
-  using stan::model::test::generate_linear_var_vector;
+  using stan::model::test::conditionally_generate_linear_var_matrix;
+  using stan::model::test::conditionally_generate_linear_var_vector;
 
-  auto x = generate_linear_var_matrix(5, 5);
+  auto x = conditionally_generate_linear_var_matrix(5, 5);
   var_value<Eigen::RowVectorXd> y
       = rvalue(x, "", index_uni(2), index_min_max(2, 4));
   EXPECT_MATRIX_EQ(y.val(), x.val().row(1).segment(1, 3));
@@ -1080,32 +1061,27 @@ TEST_F(RvalueRev, uni_minmax_matrix) {
 TEST_F(RvalueRev, uni_negative_minmax_matrix) {
   using stan::math::sum;
   using stan::math::var_value;
-  using stan::model::test::generate_linear_var_matrix;
-  using stan::model::test::generate_linear_var_vector;
+  using stan::model::test::conditionally_generate_linear_var_matrix;
+  using stan::model::test::conditionally_generate_linear_var_vector;
 
-  auto x = generate_linear_var_matrix(5, 5);
+  auto x = conditionally_generate_linear_var_matrix(5, 5);
   var_value<Eigen::RowVectorXd> y
       = rvalue(x, "", index_uni(2), index_min_max(4, 2));
-  EXPECT_MATRIX_EQ(y.val(), x.val().row(1).segment(1, 3).reverse());
-  sum(y).grad();
-  Eigen::MatrixXd x_exp_adjs = Eigen::MatrixXd::Zero(5, 5);
-  Eigen::RowVectorXd y_exp_adjs = Eigen::RowVectorXd::Ones(3);
-  x_exp_adjs.row(1).segment(1, 3) = y_exp_adjs;
-  EXPECT_MATRIX_EQ(x.adj(), x_exp_adjs);
-  EXPECT_MATRIX_EQ(y.adj(), y_exp_adjs);
+  EXPECT_EQ(1U, y.rows());
+  EXPECT_EQ(0U, y.cols());
   test_throw_out_of_range(x, index_uni(0), index_min_max(4, 2));
   test_throw_out_of_range(x, index_uni(7), index_min_max(4, 2));
-  test_throw_out_of_range(x, index_uni(2), index_min_max(2, 0));
   test_throw_out_of_range(x, index_uni(2), index_min_max(15, 0));
+  EXPECT_NO_THROW(rvalue(x, "", index_uni(2), index_min_max(2, 0)));
 }
 
 // nil only shows up as a single index
 TEST_F(RvalueRev, nil_matrix) {
   using stan::math::var_value;
-  using stan::model::test::generate_linear_var_matrix;
-  using stan::model::test::generate_linear_var_vector;
+  using stan::model::test::conditionally_generate_linear_var_matrix;
+  using stan::model::test::conditionally_generate_linear_var_vector;
 
-  auto x = generate_linear_var_matrix(5, 5);
+  auto x = conditionally_generate_linear_var_matrix(5, 5);
   Eigen::MatrixXd x_val = x.val();
   auto y = rvalue(x, "");
   EXPECT_MATRIX_EQ(y.val(), x.val());

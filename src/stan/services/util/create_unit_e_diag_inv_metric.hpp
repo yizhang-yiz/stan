@@ -1,7 +1,7 @@
 #ifndef STAN_SERVICES_UTIL_CREATE_UNIT_E_DIAG_INV_METRIC_HPP
 #define STAN_SERVICES_UTIL_CREATE_UNIT_E_DIAG_INV_METRIC_HPP
 
-#include <stan/io/dump.hpp>
+#include <stan/io/array_var_context.hpp>
 #include <sstream>
 
 namespace stan {
@@ -15,16 +15,12 @@ namespace util {
  * @param[in] num_params expected number of diagonal elements
  * @return var_context
  */
-inline stan::io::dump create_unit_e_diag_inv_metric(size_t num_params) {
-  std::stringstream txt;
-  txt << "inv_metric <- structure(c(";
-  for (size_t i = 0; i < num_params; ++i) {
-    txt << "1.0";
-    if (i < num_params - 1)
-      txt << ", ";
-  }
-  txt << "),.Dim=c(" << num_params << "))";
-  return stan::io::dump(txt);
+inline auto create_unit_e_diag_inv_metric(size_t num_params) {
+  std::vector<std::string> names{"inv_metric"};
+  std::vector<double> vals(num_params, 1.0);
+  std::vector<std::vector<size_t>> dimss{{num_params}};
+
+  return stan::io::array_var_context(names, vals, dimss);
 }
 }  // namespace util
 }  // namespace services

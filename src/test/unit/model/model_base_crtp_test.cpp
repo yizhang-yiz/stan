@@ -21,8 +21,10 @@ struct mock_model : public stan::model::model_base_crtp<mock_model> {
     return stanc_info;
   }
 
-  void get_param_names(std::vector<std::string>& names) const override {}
-  void get_dims(std::vector<std::vector<size_t> >& dimss) const override {}
+  void get_param_names(std::vector<std::string>& names, bool include_tparams,
+                       bool include_gqs) const override {}
+  void get_dims(std::vector<std::vector<size_t> >& dimss, bool include_tparams,
+                bool include_gqs) const override {}
 
   void constrained_param_names(std::vector<std::string>& param_names,
                                bool include_tparams,
@@ -99,6 +101,13 @@ struct mock_model : public stan::model::model_base_crtp<mock_model> {
                    std::vector<double>& params_r_constrained,
                    bool include_tparams, bool include_gqs,
                    std::ostream* msgs) const {}
+
+  void unconstrain_array(const Eigen::VectorXd& params_constrained_r,
+                         Eigen::VectorXd& params_r,
+                         std::ostream* msgs = nullptr) const override {}
+  void unconstrain_array(const std::vector<double>& params_constrained_r,
+                         std::vector<double>& params_r,
+                         std::ostream* msgs = nullptr) const override {}
 };
 
 TEST(model, modelBaseInheritance) {

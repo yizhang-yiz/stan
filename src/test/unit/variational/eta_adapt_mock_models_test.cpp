@@ -1,15 +1,11 @@
 #include <ostream>
 #include <stan/io/var_context.hpp>
-#include <stan/io/dump.hpp>
 #include <stan/callbacks/stream_logger.hpp>
 #include <stan/model/prob_grad.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
 #include <gtest/gtest.h>
 #include <test/unit/util.hpp>
 #include <stan/variational/advi.hpp>
-#include <boost/random/additive_combine.hpp>  // L'Ecuyer RNG
-
-typedef boost::ecuyer1988 rng_t;
 
 // Mock Model
 class mock_model : public stan::model::prob_grad {
@@ -43,7 +39,8 @@ class mock_model : public stan::model::prob_grad {
     }
   }
 
-  void get_dims(std::vector<std::vector<size_t> >& dimss__) const {
+  void get_dims(std::vector<std::vector<size_t> >& dimss__,
+                bool include_tparams = true, bool include_gqs = true) const {
     dimss__.resize(0);
     std::vector<size_t> scalar_dim;
     dimss__.push_back(scalar_dim);
@@ -59,7 +56,9 @@ class mock_model : public stan::model::prob_grad {
     param_names__.push_back("c");
   }
 
-  void get_param_names(std::vector<std::string>& names) const {
+  void get_param_names(std::vector<std::string>& names,
+                       bool include_tparams = true,
+                       bool include_gqs = true) const {
     constrained_param_names(names);
   }
 
@@ -124,7 +123,8 @@ class mock_throwing_model : public stan::model::prob_grad {
     }
   }
 
-  void get_dims(std::vector<std::vector<size_t> >& dimss__) const {
+  void get_dims(std::vector<std::vector<size_t> >& dimss__,
+                bool include_tparams = true, bool include_gqs = true) const {
     dimss__.resize(0);
     std::vector<size_t> scalar_dim;
     dimss__.push_back(scalar_dim);
@@ -140,7 +140,9 @@ class mock_throwing_model : public stan::model::prob_grad {
     param_names__.push_back("c");
   }
 
-  void get_param_names(std::vector<std::string>& names) const {
+  void get_param_names(std::vector<std::string>& names,
+                       bool include_tparams = true,
+                       bool include_gqs = true) const {
     constrained_param_names(names);
   }
 

@@ -6,6 +6,7 @@
 #include <boost/algorithm/string.hpp>
 #include <stan/math/prim/fun/Eigen.hpp>
 #include <gtest/gtest.h>
+#include <rapidjson/document.h>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -89,6 +90,57 @@ void match_csv_columns(const Eigen::MatrixXd& samples,
   }
 #endif
 
+#ifndef EXPECT_MATRIX_NEAR
+#define EXPECT_MATRIX_NEAR(A, B, DELTA)                               \
+  {                                                                   \
+    using T_A = std::decay_t<decltype(A)>;                            \
+    using T_B = std::decay_t<decltype(B)>;                            \
+    const Eigen::Matrix<typename T_A::Scalar, T_A::RowsAtCompileTime, \
+                        T_A::ColsAtCompileTime>                       \
+        A_eval = A;                                                   \
+    const Eigen::Matrix<typename T_B::Scalar, T_B::RowsAtCompileTime, \
+                        T_B::ColsAtCompileTime>                       \
+        B_eval = B;                                                   \
+    EXPECT_EQ(A_eval.rows(), B_eval.rows());                          \
+    EXPECT_EQ(A_eval.cols(), B_eval.cols());                          \
+    for (int i = 0; i < A_eval.size(); i++)                           \
+      EXPECT_NEAR(A_eval(i), B_eval(i), DELTA);                       \
+  }
+#endif
+
+/**
+ * Gets the path separator for the OS.
+ *
+ * @return '\' for Windows, '/' otherwise.
+ */
+char get_slash() {
+#if defined(WIN32) || defined(_WIN32) \
+    || defined(__WIN32) && !defined(__CYGWIN__)
+  static char path_separator = '\\';
+#else
+  static char path_separator = '/';
+#endif
+  return path_separator;
+}
+
+/**
+ * Returns the path as a string with the appropriate path separator.
+ *
+ * @param file_path vector of strings representing path to the file
+ * @return the string representation of the path
+ */
+std::string paths_to_fname(const std::vector<std::string>& path) {
+  std::string pathstr;
+  if (path.size() > 0) {
+    pathstr.append(path[0]);
+    for (size_t i = 1; i < path.size(); i++) {
+      pathstr.append(1, get_slash());
+      pathstr.append(path[i]);
+    }
+  }
+  return pathstr;
+}
+
 namespace stan {
 namespace test {
 std::streambuf* cout_buf = 0;
@@ -114,6 +166,16 @@ void reset_std_streams() {
   cout_buf = 0;
   cerr_buf = 0;
 }
+
+/**
+ * Validate JSON using rapidjson parser.
+ * @param text String of JSON
+ */
+bool is_valid_JSON(std::string& text) {
+  rapidjson::Document document;
+  return !document.Parse<0>(text.c_str()).HasParseError();
+}
+
 }  // namespace test
 }  // namespace stan
 

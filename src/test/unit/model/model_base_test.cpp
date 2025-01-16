@@ -13,14 +13,16 @@ struct mock_model : public stan::model::model_base {
 
   std::string model_name() const override { return "mock_model"; }
 
-  std::vector<std::string> model_compile_info() const {
+  std::vector<std::string> model_compile_info() const override {
     std::vector<std::string> stanc_info;
     stanc_info.push_back("stanc_version = stanc3");
     return stanc_info;
   }
 
-  void get_param_names(std::vector<std::string>& names) const override {}
-  void get_dims(std::vector<std::vector<size_t> >& dimss) const override {}
+  void get_param_names(std::vector<std::string>& names, bool include_tparams,
+                       bool include_gqs) const override {}
+  void get_dims(std::vector<std::vector<size_t> >& dimss, bool include_tparams,
+                bool include_gqs) const override {}
 
   void constrained_param_names(std::vector<std::string>& param_names,
                                bool include_tparams,
@@ -77,9 +79,13 @@ struct mock_model : public stan::model::model_base {
                        Eigen::VectorXd& params_r,
                        std::ostream* msgs) const override {}
 
-  void write_array(boost::ecuyer1988& base_rng, Eigen::VectorXd& params_r,
+  void write_array(stan::rng_t& base_rng, Eigen::VectorXd& params_r,
                    Eigen::VectorXd& params_constrained_r, bool include_tparams,
                    bool include_gqs, std::ostream* msgs) const override {}
+
+  void unconstrain_array(const Eigen::VectorXd& params_constrained_r,
+                         Eigen::VectorXd& params_r,
+                         std::ostream* msgs = nullptr) const override {}
 
   double log_prob(std::vector<double>& params_r, std::vector<int>& params_i,
                   std::ostream* msgs) const override {
@@ -133,11 +139,42 @@ struct mock_model : public stan::model::model_base {
                        std::vector<double>& params_r,
                        std::ostream* msgs) const override {}
 
-  void write_array(boost::ecuyer1988& base_rng, std::vector<double>& params_r,
+  void write_array(stan::rng_t& base_rng, std::vector<double>& params_r,
                    std::vector<int>& params_i,
                    std::vector<double>& params_r_constrained,
                    bool include_tparams, bool include_gqs,
                    std::ostream* msgs) const override {}
+
+  void unconstrain_array(const std::vector<double>& params_constrained_r,
+                         std::vector<double>& params_r,
+                         std::ostream* msgs = nullptr) const override {}
+
+#ifdef STAN_MODEL_FVAR_VAR
+
+  stan::math::fvar<stan::math::var> log_prob(
+      Eigen::Matrix<stan::math::fvar<stan::math::var>, -1, 1>& params_r,
+      std::ostream* msgs) const override {
+    return 18;
+  }
+
+  stan::math::fvar<stan::math::var> log_prob_jacobian(
+      Eigen::Matrix<stan::math::fvar<stan::math::var>, -1, 1>& params_r,
+      std::ostream* msgs) const override {
+    return 19;
+  }
+
+  stan::math::fvar<stan::math::var> log_prob_propto(
+      Eigen::Matrix<stan::math::fvar<stan::math::var>, -1, 1>& params_r,
+      std::ostream* msgs) const override {
+    return 20;
+  }
+
+  stan::math::fvar<stan::math::var> log_prob_propto_jacobian(
+      Eigen::Matrix<stan::math::fvar<stan::math::var>, -1, 1>& params_r,
+      std::ostream* msgs) const override {
+    return 21;
+  }
+#endif
 };
 
 TEST(model, modelBaseInheritance) {
@@ -185,4 +222,25 @@ TEST(model, modelTemplateLogProb) {
   EXPECT_FLOAT_EQ(7, v7);
   double v8 = bm.template log_prob<true, true>(params_r_v, msgs).val();
   EXPECT_FLOAT_EQ(8, v8);
+
+#ifdef STAN_MODEL_FVAR_VAR
+  Eigen::Matrix<stan::math::fvar<stan::math::var>, -1, 1> params_r_fv(3);
+  EXPECT_FLOAT_EQ(18, bm.log_prob(params_r_fv, msgs).val().val());
+  EXPECT_FLOAT_EQ(19, bm.log_prob_jacobian(params_r_fv, msgs).val().val());
+  EXPECT_FLOAT_EQ(20, bm.log_prob_propto(params_r_fv, msgs).val().val());
+  EXPECT_FLOAT_EQ(21,
+                  bm.log_prob_propto_jacobian(params_r_fv, msgs).val().val());
+
+  double v9 = bm.template log_prob<false, false>(params_r_fv, msgs).val().val();
+  EXPECT_FLOAT_EQ(18, v9);
+
+  double v10 = bm.template log_prob<false, true>(params_r_fv, msgs).val().val();
+  EXPECT_FLOAT_EQ(19, v10);
+
+  double v11 = bm.template log_prob<true, false>(params_r_fv, msgs).val().val();
+  EXPECT_FLOAT_EQ(20, v11);
+
+  double v12 = bm.template log_prob<true, true>(params_r_fv, msgs).val().val();
+  EXPECT_FLOAT_EQ(21, v12);
+#endif
 }

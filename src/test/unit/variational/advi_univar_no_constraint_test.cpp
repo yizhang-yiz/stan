@@ -1,27 +1,25 @@
 #include <test/test-models/good/variational/univariate_no_constraint.hpp>
 #include <stan/variational/advi.hpp>
 #include <stan/callbacks/stream_logger.hpp>
-#include <gtest/gtest.h>
+#include <stan/io/empty_var_context.hpp>
 #include <test/unit/util.hpp>
-#include <vector>
+#include <stan/services/util/create_rng.hpp>
+#include <gtest/gtest.h>
+#include <cmath>
 #include <string>
-#include <boost/random/additive_combine.hpp>  // L'Ecuyer RNG
+#include <vector>
 
-typedef boost::ecuyer1988 rng_t;
 typedef univariate_no_constraint_model_namespace::univariate_no_constraint_model
     Model;
 
 TEST(advi_test, univar_no_constraint_fullrank) {
-  // Create mock data_var_context
-  static const std::string DATA = "";
-  std::stringstream data_stream(DATA);
-  stan::io::dump dummy_context(data_stream);
+  stan::io::empty_var_context dummy_context;
 
   // Instantiate model
   Model my_model(dummy_context);
 
   // RNG
-  rng_t base_rng(0);
+  stan::rng_t base_rng = stan::services::util::create_rng(0, 0);
 
   // Other params
   int n_monte_carlo_grad = 10;
@@ -34,7 +32,8 @@ TEST(advi_test, univar_no_constraint_fullrank) {
   cont_params(0) = -0.75;
 
   // ADVI
-  stan::variational::advi<Model, stan::variational::normal_fullrank, rng_t>
+  stan::variational::advi<Model, stan::variational::normal_fullrank,
+                          stan::rng_t>
       test_advi(my_model, cont_params, base_rng, n_monte_carlo_grad,
                 1e4,  // absurdly high!
                 100, 1);
@@ -57,14 +56,15 @@ TEST(advi_test, univar_no_constraint_fullrank) {
 
   double S_j = 1.0 / (2.0 * stan::math::pi()) * sqrt(sigma_j_sq / (1.0))
                * exp(-0.5
-                     * (pow(1.5, 2) + pow(1.4, 2) + pow(1.6, 2)
-                        - pow(mu_j, 2) / sigma_j_sq));
+                     * (std::pow(1.5, 2) + std::pow(1.4, 2) + std::pow(1.6, 2)
+                        - std::pow(mu_j, 2) / sigma_j_sq));
 
   double elbo_true = 0.0;
 
   elbo_true += log(S_j);
   elbo_true += log(1.0 / (sqrt(sigma_j_sq * 2.0 * stan::math::pi())));
-  elbo_true += -0.5 * (pow(mu_j - 1.88, 2) / sigma_j_sq + 1.0 / sigma_j_sq);
+  elbo_true
+      += -0.5 * (std::pow(mu_j - 1.88, 2) / sigma_j_sq + 1.0 / sigma_j_sq);
   elbo_true += 0.5 * (1 + log(2.0 * stan::math::pi()));
 
   double const EPSILON = 0.1;
@@ -135,16 +135,13 @@ TEST(advi_test, univar_no_constraint_fullrank) {
 }
 
 TEST(advi_test, univar_no_constraint_meanfield) {
-  // Create mock data_var_context
-  static const std::string DATA = "";
-  std::stringstream data_stream(DATA);
-  stan::io::dump dummy_context(data_stream);
+  stan::io::empty_var_context dummy_context;
 
   // Instantiate model
   Model my_model(dummy_context);
 
   // RNG
-  rng_t base_rng(0);
+  stan::rng_t base_rng = stan::services::util::create_rng(0, 0);
 
   // Other params
   int n_monte_carlo_grad = 10;
@@ -157,7 +154,8 @@ TEST(advi_test, univar_no_constraint_meanfield) {
   cont_params(0) = -0.75;
 
   // ADVI
-  stan::variational::advi<Model, stan::variational::normal_meanfield, rng_t>
+  stan::variational::advi<Model, stan::variational::normal_meanfield,
+                          stan::rng_t>
       test_advi(my_model, cont_params, base_rng, n_monte_carlo_grad,
                 1e4,  // absurdly high!
                 100, 1);
@@ -182,14 +180,15 @@ TEST(advi_test, univar_no_constraint_meanfield) {
 
   double S_j = 1.0 / (2.0 * stan::math::pi()) * sqrt(sigma_j_sq / (1.0))
                * exp(-0.5
-                     * (pow(1.5, 2) + pow(1.4, 2) + pow(1.6, 2)
-                        - pow(mu_j, 2) / sigma_j_sq));
+                     * (std::pow(1.5, 2) + std::pow(1.4, 2) + std::pow(1.6, 2)
+                        - std::pow(mu_j, 2) / sigma_j_sq));
 
   double elbo_true = 0.0;
 
   elbo_true += log(S_j);
   elbo_true += log(1.0 / (sqrt(sigma_j_sq * 2.0 * stan::math::pi())));
-  elbo_true += -0.5 * (pow(mu_j - 1.88, 2) / sigma_j_sq + 1.0 / sigma_j_sq);
+  elbo_true
+      += -0.5 * (std::pow(mu_j - 1.88, 2) / sigma_j_sq + 1.0 / sigma_j_sq);
   elbo_true += 0.5 * (1 + log(2.0 * stan::math::pi()));
 
   double const EPSILON = 0.1;

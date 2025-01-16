@@ -1,18 +1,50 @@
 #ifndef TEST__UNIT__INSTRUMENTED_CALLBACKS_HPP
 #define TEST__UNIT__INSTRUMENTED_CALLBACKS_HPP
 
+#include <stan/callbacks/interrupt.hpp>
+#include <stan/callbacks/logger.hpp>
 #include <stan/callbacks/stream_writer.hpp>
 #include <stan/callbacks/writer.hpp>
-#include <stan/callbacks/interrupt.hpp>
+#include <stan/io/empty_var_context.hpp>
 #include <stan/math/prim/fun/Eigen.hpp>
-#include <map>
-#include <string>
-#include <iostream>
+#include <atomic>
 #include <exception>
+#include <iostream>
+#include <map>
+#include <mutex>
+#include <string>
 
 namespace stan {
 namespace test {
 namespace unit {
+
+/**
+ * Mock writer that records names and states written.
+ */
+class values_writer : public stan::callbacks::stream_writer {
+ public:
+  std::vector<std::string> names_;
+  std::vector<std::vector<double>> states_;
+
+  values_writer(std::ostream& stream)
+      : stan::callbacks::stream_writer(stream) {}
+
+  /**
+   * Writes a set of names.
+   *
+   * @param[in] names Names in a std::vector
+   */
+  void operator()(const std::vector<std::string>& names) { names_ = names; }
+
+  /**
+   * Writes a set of values.
+   *
+   * @param[in] state Values in a std::vector
+   */
+  void operator()(const std::vector<double>& state) {
+    states_.push_back(state);
+  }
+};
 
 /**
  * instrumented_interrupt counts the number of times it is
@@ -27,7 +59,7 @@ class instrumented_interrupt : public stan::callbacks::interrupt {
   unsigned int call_count() { return counter_; }
 
  private:
-  unsigned int counter_;
+  std::atomic<unsigned int> counter_;
 };
 
 /**
@@ -96,55 +128,54 @@ class instrumented_writer : public stan::callbacks::writer {
 
   unsigned int call_count() {
     unsigned int n = 0;
-    for (std::map<std::string, int>::iterator it = counter_.begin();
-         it != counter_.end(); ++it)
-      n += it->second;
+    for (auto& it : counter_)
+      n += it.second;
     return n;
   }
 
   unsigned int call_count(std::string s) { return counter_[s]; }
 
-  std::vector<std::pair<std::string, double> > string_double_values() {
+  std::vector<std::pair<std::string, double>> string_double_values() {
     return string_double;
   };
 
-  std::vector<std::pair<std::string, int> > string_int_values() {
+  std::vector<std::pair<std::string, int>> string_int_values() {
     return string_int;
   };
 
-  std::vector<std::pair<std::string, std::string> > string_string_values() {
+  std::vector<std::pair<std::string, std::string>> string_string_values() {
     return string_string;
   };
 
-  std::vector<std::pair<std::string, std::vector<double> > >
+  std::vector<std::pair<std::string, std::vector<double>>>
   string_pdouble_int_values() {
     return string_pdouble_int;
   };
 
-  std::vector<std::pair<std::string, Eigen::MatrixXd> >
+  std::vector<std::pair<std::string, Eigen::MatrixXd>>
   string_pdouble_int_int_values() {
     return string_pdouble_int_int;
   };
 
-  std::vector<std::vector<std::string> > vector_string_values() {
+  std::vector<std::vector<std::string>> vector_string_values() {
     return vector_string;
   };
 
-  std::vector<std::vector<double> > vector_double_values() {
+  std::vector<std::vector<double>> vector_double_values() {
     return vector_double;
   };
 
   std::vector<std::string> string_values() { return string; };
 
  private:
-  std::map<std::string, int> counter_;
-  std::vector<std::pair<std::string, double> > string_double;
-  std::vector<std::pair<std::string, int> > string_int;
-  std::vector<std::pair<std::string, std::string> > string_string;
-  std::vector<std::pair<std::string, std::vector<double> > > string_pdouble_int;
-  std::vector<std::pair<std::string, Eigen::MatrixXd> > string_pdouble_int_int;
-  std::vector<std::vector<std::string> > vector_string;
-  std::vector<std::vector<double> > vector_double;
+  std::map<std::string, std::atomic<int>> counter_;
+  std::vector<std::pair<std::string, double>> string_double;
+  std::vector<std::pair<std::string, int>> string_int;
+  std::vector<std::pair<std::string, std::string>> string_string;
+  std::vector<std::pair<std::string, std::vector<double>>> string_pdouble_int;
+  std::vector<std::pair<std::string, Eigen::MatrixXd>> string_pdouble_int_int;
+  std::vector<std::vector<std::string>> vector_string;
+  std::vector<std::vector<double>> vector_double;
   std::vector<std::string> string;
 };
 
@@ -156,35 +187,53 @@ class instrumented_writer : public stan::callbacks::writer {
  */
 class instrumented_logger : public stan::callbacks::logger {
  public:
+  std::mutex logger_guard;
   instrumented_logger() {}
 
-  void debug(const std::string& message) { debug_.push_back(message); }
+  void debug(const std::string& message) {
+    std::lock_guard<std::mutex> guard(logger_guard);
+    debug_.push_back(message);
+  }
 
   void debug(const std::stringstream& message) {
+    std::lock_guard<std::mutex> guard(logger_guard);
     debug_.push_back(message.str());
   }
 
-  void info(const std::string& message) { info_.push_back(message); }
+  void info(const std::string& message) {
+    std::lock_guard<std::mutex> guard(logger_guard);
+    info_.push_back(message);
+  }
 
   void info(const std::stringstream& message) {
+    std::lock_guard<std::mutex> guard(logger_guard);
     info_.push_back(message.str());
   }
 
-  void warn(const std::string& message) { warn_.push_back(message); }
+  void warn(const std::string& message) {
+    std::lock_guard<std::mutex> guard(logger_guard);
+    warn_.push_back(message);
+  }
 
   void warn(const std::stringstream& message) {
+    std::lock_guard<std::mutex> guard(logger_guard);
     warn_.push_back(message.str());
   }
 
-  void error(const std::string& message) { error_.push_back(message); }
+  void error(const std::string& message) {
+    std::lock_guard<std::mutex> guard(logger_guard);
+    error_.push_back(message);
+  }
 
   void error(const std::stringstream& message) {
+    std::lock_guard<std::mutex> guard(logger_guard);
     error_.push_back(message.str());
   }
 
   void fatal(const std::string& message) { fatal_.push_back(message); }
 
   void fatal(const std::stringstream& message) {
+    std::lock_guard<std::mutex> guard(logger_guard);
     fatal_.push_back(message.str());
   }
 
@@ -233,13 +282,29 @@ class instrumented_logger : public stan::callbacks::logger {
     return count;
   }
 
+ public:
+  std::vector<std::string> return_all_logs() {
+    std::vector<std::string> all_logs;
+    all_logs.reserve(debug_.size() + info_.size() + warn_.size() + error_.size()
+                     + fatal_.size() + 5);
+    all_logs.emplace_back("DEBUG");
+    all_logs.insert(all_logs.end(), debug_.begin(), debug_.end());
+    all_logs.emplace_back("INFO");
+    all_logs.insert(all_logs.end(), info_.begin(), info_.end());
+    all_logs.emplace_back("WARN");
+    all_logs.insert(all_logs.end(), warn_.begin(), warn_.end());
+    all_logs.emplace_back("ERROR");
+    all_logs.insert(all_logs.end(), error_.begin(), error_.end());
+    all_logs.emplace_back("FATAL");
+    all_logs.insert(all_logs.end(), fatal_.begin(), fatal_.end());
+    return all_logs;
+  }
   std::vector<std::string> debug_;
   std::vector<std::string> info_;
   std::vector<std::string> warn_;
   std::vector<std::string> error_;
   std::vector<std::string> fatal_;
 };
-
 }  // namespace unit
 }  // namespace test
 }  // namespace stan

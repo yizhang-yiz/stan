@@ -5,7 +5,6 @@
 #include <stan/io/validate_dims.hpp>
 #include <stan/io/var_context.hpp>
 #include <stan/math/prim.hpp>
-#include <boost/lexical_cast.hpp>
 #include <iostream>
 #include <limits>
 #include <map>
@@ -242,8 +241,8 @@ class dump_reader {
     scan_optional_long();
     size_t d = 0;
     try {
-      d = boost::lexical_cast<size_t>(buf_);
-    } catch (const boost::bad_lexical_cast& exc) {
+      d = std::stoull(buf_);
+    } catch (const std::logic_error& e) {
       std::string msg = "value " + buf_ + " beyond array dimension range";
       throw std::invalid_argument(msg);
     }
@@ -269,8 +268,8 @@ class dump_reader {
   int get_int() {
     int n = 0;
     try {
-      n = boost::lexical_cast<int>(buf_);
-    } catch (const boost::bad_lexical_cast& exc) {
+      n = std::stol(buf_);
+    } catch (const std::logic_error& e) {
       std::string msg = "value " + buf_ + " beyond int range";
       throw std::invalid_argument(msg);
     }
@@ -280,10 +279,10 @@ class dump_reader {
   double scan_double() {
     double x = 0;
     try {
-      x = boost::lexical_cast<double>(buf_);
+      x = std::stod(buf_);
       if (x == 0)
         validate_zero_buf(buf_);
-    } catch (const boost::bad_lexical_cast& exc) {
+    } catch (const std::logic_error& e) {
       std::string msg = "value " + buf_ + " beyond numeric range";
       throw std::invalid_argument(msg);
     }
@@ -596,9 +595,9 @@ class dump_reader {
  */
 class dump : public stan::io::var_context {
  private:
-  std::map<std::string, std::pair<std::vector<double>, std::vector<size_t> > >
+  std::map<std::string, std::pair<std::vector<double>, std::vector<size_t>>>
       vars_r_;
-  std::map<std::string, std::pair<std::vector<int>, std::vector<size_t> > >
+  std::map<std::string, std::pair<std::vector<int>, std::vector<size_t>>>
       vars_i_;
   std::vector<double> const empty_vec_r_;
   std::vector<int> const empty_vec_i_;
@@ -629,12 +628,12 @@ class dump : public stan::io::var_context {
     while (reader.next()) {
       if (reader.is_int()) {
         vars_i_[reader.name()]
-            = std::pair<std::vector<int>, std::vector<size_t> >(
+            = std::pair<std::vector<int>, std::vector<size_t>>(
                 reader.int_values(), reader.dims());
 
       } else {
         vars_r_[reader.name()]
-            = std::pair<std::vector<double>, std::vector<size_t> >(
+            = std::pair<std::vector<double>, std::vector<size_t>>(
                 reader.double_values(), reader.dims());
       }
     }
@@ -683,6 +682,37 @@ class dump : public stan::io::var_context {
       return vec_r;
     }
     return empty_vec_r_;
+  }
+
+  std::vector<std::complex<double>> vals_c(const std::string& name) const {
+    const auto val_r = vars_r_.find(name);
+    if (val_r != vars_r_.end()) {
+      std::vector<std::complex<double>> ret_c(val_r->second.first.size() / 2);
+      int comp_iter;
+      int real_iter;
+      for (comp_iter = 0, real_iter = 0; real_iter < val_r->second.first.size();
+           comp_iter += 1, real_iter += 2) {
+        ret_c[comp_iter] = std::complex<double>{
+            val_r->second.first[real_iter], val_r->second.first[real_iter + 1]};
+      }
+      return ret_c;
+    } else if (contains_i(name)) {
+      const auto val_i = vars_i_.find(name);
+      if (val_i != vars_i_.end()) {
+        std::vector<std::complex<double>> ret_c(val_i->second.first.size() / 2);
+        int comp_iter;
+        int real_iter;
+        for (comp_iter = 0, real_iter = 0;
+             real_iter < val_i->second.first.size();
+             comp_iter += 1, real_iter += 2) {
+          ret_c[comp_iter] = std::complex<double>{
+              static_cast<double>(val_i->second.first[real_iter]),
+              static_cast<double>(val_i->second.first[real_iter + 1])};
+        }
+        return ret_c;
+      }
+    }
+    return std::vector<std::complex<double>>{};
   }
 
   /**
@@ -738,7 +768,7 @@ class dump : public stan::io::var_context {
   virtual void names_r(std::vector<std::string>& names) const {
     names.resize(0);
     for (std::map<std::string, std::pair<std::vector<double>,
-                                         std::vector<size_t> > >::const_iterator
+                                         std::vector<size_t>>>::const_iterator
              it
          = vars_r_.begin();
          it != vars_r_.end(); ++it)
@@ -754,7 +784,7 @@ class dump : public stan::io::var_context {
   virtual void names_i(std::vector<std::string>& names) const {
     names.resize(0);
     for (std::map<std::string, std::pair<std::vector<int>,
-                                         std::vector<size_t> > >::const_iterator
+                                         std::vector<size_t>>>::const_iterator
              it
          = vars_i_.begin();
          it != vars_i_.end(); ++it)

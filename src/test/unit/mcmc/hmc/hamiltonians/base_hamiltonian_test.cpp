@@ -1,23 +1,21 @@
 #include <test/unit/mcmc/hmc/mock_hmc.hpp>
 #include <test/test-models/good/mcmc/hmc/hamiltonians/funnel.hpp>
 #include <stan/callbacks/stream_logger.hpp>
+#include <stan/io/empty_var_context.hpp>
 #include <stan/callbacks/stream_writer.hpp>
-#include <boost/random/additive_combine.hpp>
+#include <stan/services/util/create_rng.hpp>
 #include <test/unit/util.hpp>
 #include <gtest/gtest.h>
 
-typedef boost::ecuyer1988 rng_t;
-
 TEST(BaseHamiltonian, update_potential_gradient) {
-  std::fstream data_stream(std::string("").c_str(), std::fstream::in);
-  stan::io::dump data_var_context(data_stream);
-  data_stream.close();
+  stan::io::empty_var_context data_var_context;
 
   std::stringstream model_output;
   funnel_model_namespace::funnel_model model(data_var_context, 0,
                                              &model_output);
 
-  stan::mcmc::mock_hamiltonian<funnel_model_namespace::funnel_model, rng_t>
+  stan::mcmc::mock_hamiltonian<funnel_model_namespace::funnel_model,
+                               stan::rng_t>
       metric(model);
   stan::mcmc::ps_point z(11);
   z.q.setOnes();
@@ -44,9 +42,7 @@ TEST(BaseHamiltonian, update_potential_gradient) {
 TEST(BaseHamiltonian, streams) {
   stan::test::capture_std_streams();
 
-  std::fstream data_stream(std::string("").c_str(), std::fstream::in);
-  stan::io::dump data_var_context(data_stream);
-  data_stream.close();
+  stan::io::empty_var_context data_var_context;
 
   EXPECT_NO_THROW(funnel_model_namespace::funnel_model model(
       data_var_context, 0, static_cast<std::stringstream*>(0)));

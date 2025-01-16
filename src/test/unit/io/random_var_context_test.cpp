@@ -1,7 +1,7 @@
 #include <stan/io/random_var_context.hpp>
 #include <stan/io/empty_var_context.hpp>
+#include <stan/services/util/create_rng.hpp>
 #include <gtest/gtest.h>
-#include <boost/random/additive_combine.hpp>  // L'Ecuyer RNG
 #include <boost/random/uniform_real_distribution.hpp>
 #include <test/test-models/good/services/test_lp.hpp>
 #include <test/unit/util.hpp>
@@ -42,7 +42,8 @@ class mock_throwing_model_in_write_array : public stan::model::prob_grad {
     }
   }
 
-  void get_dims(std::vector<std::vector<size_t> >& dimss__) const {
+  void get_dims(std::vector<std::vector<size_t> >& dimss__,
+                bool include_tparams = true, bool include_gqs = true) const {
     dimss__.resize(0);
     std::vector<size_t> scalar_dim;
     dimss__.push_back(scalar_dim);
@@ -54,7 +55,9 @@ class mock_throwing_model_in_write_array : public stan::model::prob_grad {
     param_names__.push_back("theta");
   }
 
-  void get_param_names(std::vector<std::string>& names) const {
+  void get_param_names(std::vector<std::string>& names,
+                       bool include_tparams = true,
+                       bool include_gqs = true) const {
     constrained_param_names(names);
   }
 
@@ -92,18 +95,20 @@ class random_var_context : public testing::Test {
   random_var_context()
       : empty_context(),
         model(empty_context, 0, static_cast<std::stringstream*>(0)),
-        rng(0),
+        rng(stan::services::util::create_rng(0, 0)),
         throwing_model() {}
 
   stan::io::empty_var_context empty_context;
   stan_model model;
-  boost::ecuyer1988 rng;
+  stan::rng_t rng;
   test::mock_throwing_model_in_write_array throwing_model;
 };
 
 TEST_F(random_var_context, contains_r) {
   stan::io::random_var_context context(model, rng, 2, false);
   EXPECT_FALSE(context.contains_r(""));
+  EXPECT_FALSE(context.contains_r("z"));    // transformed parameter
+  EXPECT_FALSE(context.contains_r("xgq"));  // generated quantity
   EXPECT_TRUE(context.contains_r("y"));
 }
 

@@ -1,7 +1,6 @@
 #ifndef STAN_MODEL_RETHROW_LOCATED_HPP
 #define STAN_MODEL_RETHROW_LOCATED_HPP
 
-#include <stan/io/program_reader.hpp>
 #include <exception>
 #include <ios>
 #include <new>
@@ -81,7 +80,8 @@ struct located_exception : public E {
  * @param[in] e original exception
  * @param[in] location string representing the source file location
  */
-inline void rethrow_located(const std::exception& e, std::string location) {
+[[noreturn]] inline void rethrow_located(const std::exception& e,
+                                         std::string location) {
   using std::bad_alloc;      // -> exception
   using std::bad_cast;       // -> exception
   using std::bad_exception;  // -> exception
@@ -131,34 +131,6 @@ inline void rethrow_located(const std::exception& e, std::string location) {
     throw runtime_error(s);
 
   throw located_exception<exception>(s, "unknown original type");
-}
-
-/**
- * Rethrow an exception of type specified by the dynamic type of
- * the specified exception, adding the specified line number to
- * the specified exception's message.
- *
- * @param[in] e original exception
- * @param[in] line line number in Stan source program where
- *   exception originated
- * @param[in] reader trace of how program was included from files
- */
-inline void rethrow_located(const std::exception& e, int line,
-                            const io::program_reader& reader
-                            = stan::io::program_reader()) {
-  std::stringstream o;
-  if (line < 1) {
-    o << "  Found before start of program.";
-  } else {
-    io::program_reader::trace_t tr = reader.trace(line);
-    o << "  (in '" << tr[tr.size() - 1].first << "' at line "
-      << tr[tr.size() - 1].second;
-    for (int i = tr.size() - 1; --i >= 0;)
-      o << "; included from '" << tr[i].first << "' at line " << tr[i].second;
-    o << ")" << std::endl;
-  }
-  std::string s = o.str();
-  rethrow_located(e, s);
 }
 
 }  // namespace lang

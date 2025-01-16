@@ -1,33 +1,42 @@
 #include <stan/services/util/inv_metric.hpp>
+#include <stan/io/dump.hpp>
 #include <gtest/gtest.h>
 
 TEST(inv_metric, create_diag_sz1) {
-  stan::io::dump dmp = stan::services::util::create_unit_e_diag_inv_metric(1);
-  stan::io::var_context& inv_inv_metric = dmp;
+  auto default_metric = stan::services::util::create_unit_e_diag_inv_metric(1);
+  stan::io::var_context& inv_inv_metric = default_metric;
   std::vector<double> diag_vals = inv_inv_metric.vals_r("inv_metric");
   EXPECT_EQ(1, diag_vals.size());
   ASSERT_NEAR(1.0, diag_vals[0], 0.0001);
 }
 
 TEST(inv_metric, create_diag_sz0) {
-  stan::io::dump dmp = stan::services::util::create_unit_e_diag_inv_metric(0);
-  stan::io::var_context& inv_inv_metric = dmp;
+  auto default_metric = stan::services::util::create_unit_e_diag_inv_metric(0);
+  stan::io::var_context& inv_inv_metric = default_metric;
   std::vector<double> diag_vals = inv_inv_metric.vals_r("inv_metric");
   EXPECT_EQ(0, diag_vals.size());
 }
 
 TEST(inv_metric, create_diag_sz100) {
-  stan::io::dump dmp = stan::services::util::create_unit_e_diag_inv_metric(100);
-  stan::io::var_context& inv_inv_metric = dmp;
+  auto default_metric
+      = stan::services::util::create_unit_e_diag_inv_metric(100);
+  stan::io::var_context& inv_inv_metric = default_metric;
   std::vector<double> diag_vals = inv_inv_metric.vals_r("inv_metric");
   EXPECT_EQ(100, diag_vals.size());
   ASSERT_NEAR(1.0, diag_vals[0], 0.0001);
   ASSERT_NEAR(1.0, diag_vals[99], 0.0001);
 }
 
+TEST(inv_metric, create_dense_sz0) {
+  auto default_metric = stan::services::util::create_unit_e_dense_inv_metric(0);
+  stan::io::var_context& inv_inv_metric = default_metric;
+  std::vector<double> diag_vals = inv_inv_metric.vals_r("inv_metric");
+  EXPECT_EQ(0, diag_vals.size());
+}
+
 TEST(inv_metric, create_dense_sz2) {
-  stan::io::dump dmp = stan::services::util::create_unit_e_dense_inv_metric(2);
-  stan::io::var_context& inv_inv_metric = dmp;
+  auto default_metric = stan::services::util::create_unit_e_dense_inv_metric(2);
+  stan::io::var_context& inv_inv_metric = default_metric;
   std::vector<double> dense_vals = inv_inv_metric.vals_r("inv_metric");
   EXPECT_EQ(4, dense_vals.size());
   ASSERT_NEAR(1.0, dense_vals[0], 0.0001);
@@ -35,8 +44,8 @@ TEST(inv_metric, create_dense_sz2) {
 }
 
 TEST(inv_metric, create_dense_sz3) {
-  stan::io::dump dmp = stan::services::util::create_unit_e_dense_inv_metric(3);
-  stan::io::var_context& inv_inv_metric = dmp;
+  auto default_metric = stan::services::util::create_unit_e_dense_inv_metric(3);
+  stan::io::var_context& inv_inv_metric = default_metric;
   std::vector<double> dense_vals = inv_inv_metric.vals_r("inv_metric");
   EXPECT_EQ(9, dense_vals.size());
   ASSERT_NEAR(1.0, dense_vals[0], 0.0001);
@@ -51,8 +60,9 @@ TEST(inv_metric, create_dense_sz3) {
 }
 
 TEST(inv_metric, create_dense_sz10) {
-  stan::io::dump dmp = stan::services::util::create_unit_e_dense_inv_metric(10);
-  stan::io::var_context& inv_inv_metric = dmp;
+  auto default_metric
+      = stan::services::util::create_unit_e_dense_inv_metric(10);
+  stan::io::var_context& inv_inv_metric = default_metric;
   std::vector<double> dense_vals = inv_inv_metric.vals_r("inv_metric");
   EXPECT_EQ(100, dense_vals.size());
   ASSERT_NEAR(1.0, dense_vals[0], 0.0001);
@@ -115,6 +125,16 @@ TEST(inv_metric, read_dense_OK) {
   ASSERT_NEAR(0.926739, inv_inv_metric(0), 0.000001);
   ASSERT_NEAR(0.0734898, inv_inv_metric(3), 0.000001);
   ASSERT_NEAR(0.8274, inv_inv_metric(8), 0.000001);
+}
+
+TEST(inv_metric, read_dense_sz0) {
+  stan::callbacks::logger logger;
+  auto zero_metric = stan::services::util::create_unit_e_dense_inv_metric(0);
+  Eigen::MatrixXd inv_inv_metric
+      = stan::services::util::read_dense_inv_metric(zero_metric, 0, logger);
+  EXPECT_EQ(0, inv_inv_metric.size());
+  EXPECT_EQ(0, inv_inv_metric.rows());
+  EXPECT_EQ(0, inv_inv_metric.cols());
 }
 
 TEST(inv_metric, read_dense_bad1) {

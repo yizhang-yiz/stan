@@ -23,6 +23,7 @@ namespace optimize {
  * Runs the BFGS algorithm for a model.
  *
  * @tparam Model A model implementation
+ * @tparam jacobian `true` to include Jacobian adjust (default `false`)
  * @param[in] model Input model to test (with data already instantiated)
  * @param[in] init var context for initialization
  * @param[in] random_seed random seed for the random number generator
@@ -48,7 +49,7 @@ namespace optimize {
  * @param[in,out] parameter_writer output for parameter values
  * @return error_codes::OK if successful
  */
-template <class Model>
+template <class Model, bool jacobian = false>
 int bfgs(Model& model, const stan::io::var_context& init,
          unsigned int random_seed, unsigned int chain, double init_radius,
          double init_alpha, double tol_obj, double tol_rel_obj, double tol_grad,
@@ -56,15 +57,21 @@ int bfgs(Model& model, const stan::io::var_context& init,
          bool save_iterations, int refresh, callbacks::interrupt& interrupt,
          callbacks::logger& logger, callbacks::writer& init_writer,
          callbacks::writer& parameter_writer) {
-  boost::ecuyer1988 rng = util::create_rng(random_seed, chain);
+  stan::rng_t rng = util::create_rng(random_seed, chain);
 
   std::vector<int> disc_vector;
-  std::vector<double> cont_vector = util::initialize<false>(
-      model, init, rng, init_radius, false, logger, init_writer);
-
+  std::vector<double> cont_vector;
+  try {
+    cont_vector = util::initialize<false>(model, init, rng, init_radius, false,
+                                          logger, init_writer);
+  } catch (const std::exception& e) {
+    logger.error(e.what());
+    return error_codes::CONFIG;
+  }
   std::stringstream bfgs_ss;
   typedef stan::optimization::BFGSLineSearch<
-      Model, stan::optimization::BFGSUpdate_HInv<> >
+      Model, stan::optimization::BFGSUpdate_HInv<>, double, Eigen::Dynamic,
+      jacobian>
       Optimizer;
   Optimizer bfgs(model, cont_vector, disc_vector, &bfgs_ss);
   bfgs._ls_opts.alpha0 = init_alpha;
@@ -89,7 +96,16 @@ int bfgs(Model& model, const stan::io::var_context& init,
   if (save_iterations) {
     std::vector<double> values;
     std::stringstream msg;
-    model.write_array(rng, cont_vector, disc_vector, values, true, true, &msg);
+    try {
+      model.write_array(rng, cont_vector, disc_vector, values, true, true,
+                        &msg);
+    } catch (const std::exception& e) {
+      if (msg.str().length() > 0) {
+        logger.info(msg);
+      }
+      logger.error(e.what());
+      return error_codes::SOFTWARE;
+    }
     if (msg.str().length() > 0)
       logger.info(msg);
 
@@ -98,66 +114,82 @@ int bfgs(Model& model, const stan::io::var_context& init,
   }
   int ret = 0;
 
-  while (ret == 0) {
-    interrupt();
-    if (refresh > 0
-        && (bfgs.iter_num() == 0 || ((bfgs.iter_num() + 1) % refresh == 0)))
-      logger.info(
-          "    Iter"
-          "      log prob"
-          "        ||dx||"
-          "      ||grad||"
-          "       alpha"
-          "      alpha0"
-          "  # evals"
-          "  Notes ");
+  try {
+    while (ret == 0) {
+      interrupt();
+      if (refresh > 0
+          && (bfgs.iter_num() == 0 || ((bfgs.iter_num() + 1) % refresh == 0)))
+        logger.info(
+            "    Iter"
+            "      log prob"
+            "        ||dx||"
+            "      ||grad||"
+            "       alpha"
+            "      alpha0"
+            "  # evals"
+            "  Notes ");
 
-    ret = bfgs.step();
-    lp = bfgs.logp();
-    bfgs.params_r(cont_vector);
+      ret = bfgs.step();
 
-    if (refresh > 0
-        && (ret != 0 || !bfgs.note().empty() || bfgs.iter_num() == 0
-            || ((bfgs.iter_num() + 1) % refresh == 0))) {
-      std::stringstream msg;
-      msg << " " << std::setw(7) << bfgs.iter_num() << " ";
-      msg << " " << std::setw(12) << std::setprecision(6) << lp << " ";
-      msg << " " << std::setw(12) << std::setprecision(6)
-          << bfgs.prev_step_size() << " ";
-      msg << " " << std::setw(12) << std::setprecision(6)
-          << bfgs.curr_g().norm() << " ";
-      msg << " " << std::setw(10) << std::setprecision(4) << bfgs.alpha()
-          << " ";
-      msg << " " << std::setw(10) << std::setprecision(4) << bfgs.alpha0()
-          << " ";
-      msg << " " << std::setw(7) << bfgs.grad_evals() << " ";
-      msg << " " << bfgs.note() << " ";
-      logger.info(msg);
-    }
+      lp = bfgs.logp();
+      bfgs.params_r(cont_vector);
 
-    if (bfgs_ss.str().length() > 0) {
-      logger.info(bfgs_ss);
-      bfgs_ss.str("");
-    }
-
-    if (save_iterations) {
-      std::vector<double> values;
-      std::stringstream msg;
-      model.write_array(rng, cont_vector, disc_vector, values, true, true,
-                        &msg);
-      // This if is here to match the pre-refactor behavior
-      if (msg.str().length() > 0)
+      if (refresh > 0
+          && (ret != 0 || !bfgs.note().empty() || bfgs.iter_num() == 0
+              || ((bfgs.iter_num() + 1) % refresh == 0))) {
+        std::stringstream msg;
+        msg << " " << std::setw(7) << bfgs.iter_num() << " ";
+        msg << " " << std::setw(12) << std::setprecision(6) << lp << " ";
+        msg << " " << std::setw(12) << std::setprecision(6)
+            << bfgs.prev_step_size() << " ";
+        msg << " " << std::setw(12) << std::setprecision(6)
+            << bfgs.curr_g().norm() << " ";
+        msg << " " << std::setw(10) << std::setprecision(4) << bfgs.alpha()
+            << " ";
+        msg << " " << std::setw(10) << std::setprecision(4) << bfgs.alpha0()
+            << " ";
+        msg << " " << std::setw(7) << bfgs.grad_evals() << " ";
+        msg << " " << bfgs.note() << " ";
         logger.info(msg);
+      }
 
-      values.insert(values.begin(), lp);
-      parameter_writer(values);
+      if (bfgs_ss.str().length() > 0) {
+        logger.info(bfgs_ss);
+        bfgs_ss.str("");
+      }
+
+      if (save_iterations) {
+        std::vector<double> values;
+        std::stringstream msg;
+        model.write_array(rng, cont_vector, disc_vector, values, true, true,
+                          &msg);
+
+        // This if is here to match the pre-refactor behavior
+        if (msg.str().length() > 0)
+          logger.info(msg);
+
+        values.insert(values.begin(), lp);
+        parameter_writer(values);
+      }
     }
+  } catch (const std::exception& e) {
+    logger.error(e.what());
+    return error_codes::SOFTWARE;
   }
 
   if (!save_iterations) {
     std::vector<double> values;
     std::stringstream msg;
-    model.write_array(rng, cont_vector, disc_vector, values, true, true, &msg);
+    try {
+      model.write_array(rng, cont_vector, disc_vector, values, true, true,
+                        &msg);
+    } catch (const std::exception& e) {
+      if (msg.str().length() > 0) {
+        logger.info(msg);
+      }
+      logger.error(e.what());
+      return error_codes::SOFTWARE;
+    }
     if (msg.str().length() > 0)
       logger.info(msg);
     values.insert(values.begin(), lp);
@@ -165,14 +197,16 @@ int bfgs(Model& model, const stan::io::var_context& init,
   }
 
   int return_code;
+  auto error_string = bfgs.get_code_string(ret);
   if (ret >= 0) {
     logger.info("Optimization terminated normally: ");
+    logger.info("  " + error_string);
     return_code = error_codes::OK;
   } else {
-    logger.info("Optimization terminated with error: ");
+    logger.error("Optimization terminated with error: ");
+    logger.error("  " + error_string);
     return_code = error_codes::SOFTWARE;
   }
-  logger.info("  " + bfgs.get_code_string(ret));
 
   return return_code;
 }

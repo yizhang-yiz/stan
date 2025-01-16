@@ -1,6 +1,9 @@
 #ifndef STAN_MODEL_MODEL_BASE_CRTP_HPP
 #define STAN_MODEL_MODEL_BASE_CRTP_HPP
 
+#ifdef STAN_MODEL_FVAR_VAR
+#include <stan/math/mix.hpp>
+#endif
 #include <stan/model/model_base.hpp>
 #include <iostream>
 #include <utility>
@@ -130,12 +133,19 @@ class model_base_crtp : public stan::model::model_base {
                                                                       msgs);
   }
 
-  void write_array(boost::ecuyer1988& rng, Eigen::VectorXd& theta,
+  void write_array(stan::rng_t& rng, Eigen::VectorXd& theta,
                    Eigen::VectorXd& vars, bool include_tparams = true,
                    bool include_gqs = true,
                    std::ostream* msgs = 0) const override {
-    return static_cast<const M*>(this)->template write_array(
+    return static_cast<const M*>(this)->write_array(
         rng, theta, vars, include_tparams, include_gqs, msgs);
+  }
+
+  void unconstrain_array(const Eigen::VectorXd& params_r_constrained,
+                         Eigen::VectorXd& params_r,
+                         std::ostream* msgs = nullptr) const override {
+    return static_cast<const M*>(this)->unconstrain_array(params_r_constrained,
+                                                          params_r, msgs);
   }
 
   // TODO(carpenter): remove redundant std::vector methods below here =====
@@ -192,12 +202,19 @@ class model_base_crtp : public stan::model::model_base {
         theta, theta_i, msgs);
   }
 
-  void write_array(boost::ecuyer1988& rng, std::vector<double>& theta,
+  void write_array(stan::rng_t& rng, std::vector<double>& theta,
                    std::vector<int>& theta_i, std::vector<double>& vars,
                    bool include_tparams = true, bool include_gqs = true,
                    std::ostream* msgs = 0) const override {
-    return static_cast<const M*>(this)->template write_array(
+    return static_cast<const M*>(this)->write_array(
         rng, theta, theta_i, vars, include_tparams, include_gqs, msgs);
+  }
+
+  void unconstrain_array(const std::vector<double>& params_r_constrained,
+                         std::vector<double>& params_r,
+                         std::ostream* msgs = nullptr) const override {
+    return static_cast<const M*>(this)->unconstrain_array(params_r_constrained,
+                                                          params_r, msgs);
   }
 
   void transform_inits(const io::var_context& context,
@@ -206,6 +223,81 @@ class model_base_crtp : public stan::model::model_base {
     return static_cast<const M*>(this)->transform_inits(context, params_r,
                                                         msgs);
   }
+
+#ifdef STAN_MODEL_FVAR_VAR
+
+  /**
+   * Return the log density for the specified unconstrained
+   * parameters, without Jacobian and with normalizing constants for
+   * probability functions.
+   *
+   * @param[in] params_r unconstrained parameters
+   * @param[in,out] msgs message stream
+   * @return log density for specified parameters
+   */
+  inline math::fvar<math::var> log_prob(
+      Eigen::Matrix<math::fvar<math::var>, -1, 1>& params_r,
+      std::ostream* msgs) const override {
+    return static_cast<const M*>(this)->template log_prob<false, false>(
+        params_r, msgs);
+  }
+
+  /**
+   * Return the log density for the specified unconstrained
+   * parameters, with Jacobian correction for constraints and with
+   * normalizing constants for probability functions.
+   *
+   * <p>The Jacobian is of the inverse transform from unconstrained
+   * parameters to constrained parameters; full details for Stan
+   * language types can be found in the language reference manual.
+   *
+   * @param[in] params_r unconstrained parameters
+   * @param[in,out] msgs message stream
+   * @return log density for specified parameters
+   */
+  inline math::fvar<math::var> log_prob_jacobian(
+      Eigen::Matrix<math::fvar<math::var>, -1, 1>& params_r,
+      std::ostream* msgs) const override {
+    return static_cast<const M*>(this)->template log_prob<false, true>(params_r,
+                                                                       msgs);
+  }
+
+  /**
+   * Return the log density for the specified unconstrained
+   * parameters, without Jacobian correction for constraints and
+   * dropping normalizing constants.
+   *
+   * @param[in] params_r unconstrained parameters
+   * @param[in,out] msgs message stream
+   * @return log density for specified parameters
+   */
+  inline math::fvar<math::var> log_prob_propto(
+      Eigen::Matrix<math::fvar<math::var>, -1, 1>& params_r,
+      std::ostream* msgs) const override {
+    return static_cast<const M*>(this)->template log_prob<true, false>(params_r,
+                                                                       msgs);
+  }
+
+  /**
+   * Return the log density for the specified unconstrained
+   * parameters, with Jacobian correction for constraints and dropping
+   * normalizing constants.
+   *
+   * <p>The Jacobian is of the inverse transform from unconstrained
+   * parameters to constrained parameters; full details for Stan
+   * language types can be found in the language reference manual.
+   *
+   * @param[in] params_r unconstrained parameters
+   * @param[in,out] msgs message stream
+   * @return log density for specified parameters
+   */
+  inline math::fvar<math::var> log_prob_propto_jacobian(
+      Eigen::Matrix<math::fvar<math::var>, -1, 1>& params_r,
+      std::ostream* msgs) const override {
+    return static_cast<const M*>(this)->template log_prob<true, true>(params_r,
+                                                                      msgs);
+  }
+#endif
 };
 
 }  // namespace model

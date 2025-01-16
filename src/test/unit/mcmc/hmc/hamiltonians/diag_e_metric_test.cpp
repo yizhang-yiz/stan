@@ -1,6 +1,6 @@
 #include <string>
-#include <boost/random/additive_combine.hpp>
-#include <stan/io/dump.hpp>
+#include <stan/services/util/create_rng.hpp>
+#include <stan/io/empty_var_context.hpp>
 #include <test/unit/mcmc/hmc/mock_hmc.hpp>
 #include <stan/mcmc/hmc/hamiltonians/diag_e_metric.hpp>
 #include <stan/callbacks/stream_logger.hpp>
@@ -8,17 +8,15 @@
 #include <test/unit/util.hpp>
 #include <gtest/gtest.h>
 
-typedef boost::ecuyer1988 rng_t;
-
 TEST(McmcDiagEMetric, sample_p) {
-  rng_t base_rng(0);
+  stan::rng_t base_rng = stan::services::util::create_rng(0, 0);
 
   Eigen::VectorXd q(2);
   q(0) = 5;
   q(1) = 1;
 
   stan::mcmc::mock_model model(q.size());
-  stan::mcmc::diag_e_metric<stan::mcmc::mock_model, rng_t> metric(model);
+  stan::mcmc::diag_e_metric<stan::mcmc::mock_model, stan::rng_t> metric(model);
   stan::mcmc::diag_e_point z(q.size());
 
   int n_samples = 1000;
@@ -44,17 +42,13 @@ TEST(McmcDiagEMetric, sample_p) {
 }
 
 TEST(McmcDiagEMetric, gradients) {
-  rng_t base_rng(0);
-
   Eigen::VectorXd q = Eigen::VectorXd::Ones(11);
 
   stan::mcmc::diag_e_point z(q.size());
   z.q = q;
   z.p.setOnes();
 
-  std::fstream data_stream(std::string("").c_str(), std::fstream::in);
-  stan::io::dump data_var_context(data_stream);
-  data_stream.close();
+  stan::io::empty_var_context data_var_context;
 
   std::stringstream model_output;
   funnel_model_namespace::funnel_model model(data_var_context, 0,
@@ -63,8 +57,8 @@ TEST(McmcDiagEMetric, gradients) {
   std::stringstream debug, info, warn, error, fatal;
   stan::callbacks::stream_logger logger(debug, info, warn, error, fatal);
 
-  stan::mcmc::diag_e_metric<funnel_model_namespace::funnel_model, rng_t> metric(
-      model);
+  stan::mcmc::diag_e_metric<funnel_model_namespace::funnel_model, stan::rng_t>
+      metric(model);
 
   double epsilon = 1e-6;
 
@@ -139,8 +133,6 @@ TEST(McmcDiagEMetric, gradients) {
 TEST(McmcDiagEMetric, streams) {
   stan::test::capture_std_streams();
 
-  rng_t base_rng(0);
-
   Eigen::VectorXd q(2);
   q(0) = 5;
   q(1) = 1;
@@ -148,7 +140,7 @@ TEST(McmcDiagEMetric, streams) {
   stan::mcmc::mock_model model(q.size());
 
   // typedef to use within Google Test macros
-  typedef stan::mcmc::diag_e_metric<stan::mcmc::mock_model, rng_t> diag_e;
+  typedef stan::mcmc::diag_e_metric<stan::mcmc::mock_model, stan::rng_t> diag_e;
 
   EXPECT_NO_THROW(diag_e metric(model));
 
